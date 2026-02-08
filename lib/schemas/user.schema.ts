@@ -1,0 +1,48 @@
+import { z } from "zod";
+
+export const userSchema = z.object({
+  uid: z.string(),
+  email: z.string().email(),
+  name: z.string().min(1),
+  citizenship: z.string().optional(),
+  incomeBracket: z.enum(["low", "medium", "high"]).optional(),
+  interests: z.array(z.string()).default([]),
+  goals: z.string().optional(),
+  educationLevel: z.enum(["high_school", "undergraduate", "graduate", "postgraduate"]).optional(),
+  fieldOfStudy: z.string().optional(),
+  gpa: z.number().min(0).max(100).optional(),
+  onboardingCompleted: z.boolean().default(false),
+  onboardingStep: z.number().default(0),
+  documentsUploaded: z.boolean().default(false),
+  transcriptUploaded: z.boolean().default(false),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const userProfileUpdateSchema = z.object({
+  name: z.string().min(1).optional(),
+  citizenship: z.string().optional(),
+  incomeBracket: z.enum(["low", "medium", "high"]).optional(),
+  interests: z.array(z.string()).optional(),
+  goals: z.string().optional(),
+  educationLevel: z.enum(["high_school", "undergraduate", "graduate", "postgraduate"]).optional(),
+  fieldOfStudy: z.string().optional(),
+  gpa: z.number().min(0).max(100).optional(),
+  onboardingCompleted: z.boolean().optional(),
+  onboardingStep: z.number().optional(),
+  documentsUploaded: z.boolean().optional(),
+  transcriptUploaded: z.boolean().optional(),
+});
+
+export const onboardingProfileSchema = z.object({
+  citizenship: z.string().min(1),
+  incomeBracket: z.enum(["low", "medium", "high"]),
+  educationLevel: z.enum(["high_school", "undergraduate", "graduate", "postgraduate"]),
+  fieldOfStudy: z.string().min(1),
+  interests: z.array(z.string()).min(1),
+  goals: z.string().min(10),
+});
+
+export type User = z.infer<typeof userSchema>;
+export type UserProfileUpdate = z.infer<typeof userProfileUpdateSchema>;
+export type OnboardingProfile = z.infer<typeof onboardingProfileSchema>;

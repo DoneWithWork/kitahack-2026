@@ -1,0 +1,87 @@
+import { adminDb } from "@/lib/firebase/admin";
+import type { Document } from "@/lib/schemas/document.schema";
+import { logger } from "@/lib/utils/logger";
+
+const DOCUMENTS_COLLECTION = "documents";
+
+export const createDocument = async (document: Document): Promise<void> => {
+  try {
+    await adminDb()
+      .collection(DOCUMENTS_COLLECTION)
+      .doc(document.id)
+      .set(document);
+  } catch (error) {
+    logger.error({ error, documentId: document.id }, "Error creating document");
+    throw error;
+  }
+};
+
+export const getDocument = async (id: string): Promise<Document | null> => {
+  try {
+    const doc = await adminDb()
+      .collection(DOCUMENTS_COLLECTION)
+      .doc(id)
+      .get();
+    if (!doc.exists) return null;
+    return doc.data() as Document;
+  } catch (error) {
+    logger.error({ error, id }, "Error getting document");
+    throw error;
+  }
+};
+
+export const getDocumentsByUser = async (uid: string): Promise<Document[]> => {
+  try {
+    const snapshot = await adminDb()
+      .collection(DOCUMENTS_COLLECTION)
+      .where("uid", "==", uid)
+      .orderBy("uploadedAt", "desc")
+      .get();
+    return snapshot.docs.map((doc) => doc.data() as Document);
+  } catch (error) {
+    logger.error({ error, uid }, "Error getting user documents");
+    throw error;
+  }
+};
+
+export const getDocumentsByType = async (
+  uid: string,
+  type: string
+): Promise<Document[]> => {
+  try {
+    const snapshot = await adminDb()
+      .collection(DOCUMENTS_COLLECTION)
+      .where("uid", "==", uid)
+      .where("type", "==", type)
+      .orderBy("uploadedAt", "desc")
+      .get();
+    return snapshot.docs.map((doc) => doc.data() as Document);
+  } catch (error) {
+    logger.error({ error, uid, type }, "Error getting documents by type");
+    throw error;
+  }
+};
+
+export const updateDocument = async (
+  id: string,
+  data: Partial<Document>
+): Promise<void> => {
+  try {
+    await adminDb()
+      .collection(DOCUMENTS_COLLECTION)
+      .doc(id)
+      .update(data);
+  } catch (error) {
+    logger.error({ error, id }, "Error updating document");
+    throw error;
+  }
+};
+
+export const deleteDocument = async (id: string): Promise<void> => {
+  try {
+    await adminDb().collection(DOCUMENTS_COLLECTION).doc(id).delete();
+  } catch (error) {
+    logger.error({ error, id }, "Error deleting document");
+    throw error;
+  }
+};
