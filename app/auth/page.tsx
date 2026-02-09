@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { ModeToggle } from "@/components/mode-toggle";
+import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -12,20 +10,31 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/components/providers/auth-provider";
-import { ModeToggle } from "@/components/mode-toggle";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { auth, db } from "@/lib/firebase/client";
 import {
-  GraduationCap,
-  Mail,
-  Lock,
-  User,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
+import {
   ArrowRight,
   Chrome,
+  GraduationCap,
   Loader2,
+  Lock,
+  Mail,
+  User,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -33,19 +42,21 @@ export default function AuthPage() {
   const { signInWithGoogle, user } = useAuth();
   const router = useRouter();
 
-  // Redirect if already logged in
-  if (user) {
-    router.push("/dashboard");
-    return null;
-  }
-
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setError(null);
     try {
       const result = await signInWithGoogle();
-      const customToken = await ctx.adminAuth.createCustomToken(newUser.uid);
-
+      const user = await auth.currentUser?.getIdTokenResult();
+      const q = query(
+        collection(db, "users"),
+        where("uid", "==", user?.claims.user_id || ""),
+      );
+      const snapShot = await getDocs(q);
+      console.log(
+        "snapShot docs:",
+        snapShot.docs[0].data().onboardingCompleted,
+      );
       if (result.isNew || !result.success) {
         router.push("/onboarding");
       } else {
@@ -66,7 +77,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-4">
       <div className="absolute top-4 right-4">
         <ModeToggle />
       </div>
@@ -75,7 +86,7 @@ export default function AuthPage() {
         {/* Left Side - Branding */}
         <div className="hidden lg:block space-y-8">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-500">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-blue-500">
               <GraduationCap className="h-7 w-7 text-white" />
             </div>
             <span className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -114,7 +125,7 @@ export default function AuthPage() {
           <CardHeader className="space-y-1">
             <div className="flex items-center justify-between lg:hidden mb-4">
               <div className="flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-500">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-blue-500">
                   <GraduationCap className="h-6 w-6 text-white" />
                 </div>
                 <span className="text-xl font-bold text-slate-900 dark:text-white">

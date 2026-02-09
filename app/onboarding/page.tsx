@@ -83,17 +83,20 @@ const commonInterests = [
 export default function OnboardingPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
 
-  const { data: onboardingStatus, refetch: refetchStatus } =
-    trpc.onboarding.getStatus.useQuery();
+  const {
+    data: onboardingStatus,
+    isLoading: statusLoading,
+    refetch: refetchStatus,
+  } = trpc.onboarding.getStatus.useQuery();
 
   useEffect(() => {
     if (onboardingStatus) {
       if (onboardingStatus.onboardingCompleted) {
         router.push("/dashboard");
       } else {
+        console.log(onboardingStatus.onboardingStep);
         setCurrentStep(onboardingStatus.onboardingStep);
       }
     }
@@ -142,14 +145,6 @@ export default function OnboardingPage() {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -167,21 +162,30 @@ export default function OnboardingPage() {
               Step {currentStep + 1} of {steps.length}
             </span>
           </div>
-          <Progress value={progress} className="h-2" />
-          <div className="flex justify-between mt-2">
-            {steps.map((step) => (
-              <div
-                key={step.id}
-                className={`text-xs ${
-                  step.id <= currentStep
-                    ? "text-blue-600 dark:text-blue-400 font-medium"
-                    : "text-slate-400"
-                }`}
-              >
-                {step.title}
+          {statusLoading ? (
+            <div className="min-h-screen flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : (
+            <>
+              {" "}
+              <Progress value={progress} className="h-2" />
+              <div className="flex justify-between mt-2">
+                {steps.map((step) => (
+                  <div
+                    key={step.id}
+                    className={`text-xs ${
+                      step.id <= currentStep
+                        ? "text-blue-600 dark:text-blue-400 font-medium"
+                        : "text-slate-400"
+                    }`}
+                  >
+                    {step.title}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </div>
 
         {renderStep()}
@@ -498,8 +502,8 @@ function TranscriptStep({
       if (!response.ok) throw new Error("Upload failed");
 
       const { url } = await response.json();
-      const result = await uploadMutation.mutateAsync({ imageUrl: url });
-      setUploadResult(result);
+      // const result = await uploadMutation.mutateAsync({ imageUrl: url });
+      // setUploadResult(result);
       await saveStatus.mutateAsync({ uploaded: true });
     } catch (error) {
       console.error("Upload error:", error);

@@ -8,7 +8,10 @@ const handler = (req: NextRequest) =>
     endpoint: "/api/trpc",
     req,
     router: appRouter,
-    createContext: async () => createContext(),
+    createContext: async (ctx) =>
+      // Forward the request object to our TRPC context creator so per-request
+      // auth can be performed on the server.
+      createContext({ req: (ctx as any)?.req ?? req }),
   });
 
 export { handler as GET, handler as POST };

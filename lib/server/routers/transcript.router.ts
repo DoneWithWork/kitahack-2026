@@ -11,7 +11,6 @@ import { extractTextFromImage, extractTextFromPDF } from "@/lib/ai/vision";
 import { adminStorage } from "@/lib/firebase/admin";
 import { now } from "@/lib/utils/dates";
 
-
 export const transcriptRouter = router({
   get: protectedProcedure.query(async ({ ctx }) => {
     return await getTranscript(ctx.user!.uid);
@@ -21,6 +20,7 @@ export const transcriptRouter = router({
     .input(z.object({ imageUrl: z.string().url() }))
     .mutation(async ({ ctx, input }) => {
       const rawText = await extractTextFromImage(input.imageUrl);
+      console.log("Extracted text:", rawText);
       const extracted = await parseTranscriptText(rawText);
 
       const transcript = transcriptSchema.parse({
@@ -39,7 +39,7 @@ export const transcriptRouter = router({
     .mutation(async ({ ctx, input }) => {
       const rawText = await extractTextFromPDF(input.gcsUri);
       const extracted = await parseTranscriptText(rawText);
-
+      console.log("Extracted transcript data:", extracted);
       const transcript = transcriptSchema.parse({
         ...extracted,
         uid: ctx.user!.uid,
@@ -58,11 +58,11 @@ export const transcriptRouter = router({
             name: z.string(),
             grade: z.number(),
             code: z.string().optional(),
-          })
+          }),
         ),
         gpa: z.number(),
         year: z.number(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       await updateTranscript(ctx.user!.uid, input);
@@ -73,8 +73,10 @@ export const transcriptRouter = router({
     .input(z.object({ filename: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const bucket = adminStorage().bucket();
-      const file = bucket.file(`transcripts/${ctx.user!.uid}/${input.filename}`);
-      
+      const file = bucket.file(
+        `transcripts/${ctx.user!.uid}/${input.filename}`,
+      );
+
       const [url] = await file.getSignedUrl({
         action: "write",
         expires: Date.now() + 15 * 60 * 1000,
