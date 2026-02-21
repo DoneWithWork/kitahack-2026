@@ -1,15 +1,10 @@
-import { z } from "zod";
-import { router, protectedProcedure } from "@/lib/trpc/server";
+import { adminStorage } from "@/lib/firebase/admin";
 import {
-  createTranscript,
   getTranscript,
   updateTranscript,
 } from "@/lib/repositories/transcripts.repo";
-import { transcriptSchema } from "@/lib/schemas/transcript.schema";
-import { parseTranscriptText } from "@/lib/services/parsing.service";
-import { extractTextFromImage, extractTextFromPDF } from "@/lib/ai/vision";
-import { adminStorage } from "@/lib/firebase/admin";
-import { now } from "@/lib/utils/dates";
+import { protectedProcedure, router } from "@/lib/trpc/server";
+import { z } from "zod";
 
 export const transcriptRouter = router({
   get: protectedProcedure.query(async ({ ctx }) => {
@@ -17,37 +12,16 @@ export const transcriptRouter = router({
   }),
 
   uploadFromImage: protectedProcedure
-    .input(z.object({ imageUrl: z.string().url() }))
+    .input(z.object({ imageUrl: z.url() }))
     .mutation(async ({ ctx, input }) => {
-      const rawText = await extractTextFromImage(input.imageUrl);
-      console.log("Extracted text:", rawText);
-      const extracted = await parseTranscriptText(rawText);
-
-      const transcript = transcriptSchema.parse({
-        ...extracted,
-        uid: ctx.user!.uid,
-        uploadedAt: now(),
-        fileUrl: input.imageUrl,
-      });
-
-      await createTranscript(transcript);
-      return { success: true, transcript };
+      console.log("Received image URL:", input.imageUrl);
+      return { success: true };
     }),
 
   uploadFromPDF: protectedProcedure
     .input(z.object({ gcsUri: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const rawText = await extractTextFromPDF(input.gcsUri);
-      const extracted = await parseTranscriptText(rawText);
-      console.log("Extracted transcript data:", extracted);
-      const transcript = transcriptSchema.parse({
-        ...extracted,
-        uid: ctx.user!.uid,
-        uploadedAt: now(),
-      });
-
-      await createTranscript(transcript);
-      return { success: true, transcript };
+      return { success: true };
     }),
 
   update: protectedProcedure

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,15 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Search, 
   Filter, 
   GraduationCap, 
-  Calendar, 
   DollarSign, 
-  Globe, 
   Award, 
   Clock,
   CheckCircle2,
@@ -27,30 +23,30 @@ import {
   ArrowRight,
   ExternalLink,
   Sparkles,
-  BookOpen,
   Target,
   Loader2,
   ChevronDown,
   ChevronUp
 } from "lucide-react";
 import Link from "next/link";
+import type { Scholarship, ScholarshipSearchFilters } from "@/lib/schemas/scholarship.schema";
 
 export default function ScholarshipsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedField, setSelectedField] = useState<string>("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedScholarship, setSelectedScholarship] = useState<any>(null);
+  const [selectedScholarship, setSelectedScholarship] = useState<Scholarship | null>(null);
   const [applicationText, setApplicationText] = useState("");
 
   const { data: scholarships, isLoading } = trpc.scholarship.search.useQuery({
     query: searchQuery || undefined,
     fields: selectedField ? [selectedField] : undefined,
-    educationLevel: selectedLevel as any || undefined,
+    educationLevel: selectedLevel as ScholarshipSearchFilters["educationLevel"] || undefined,
   });
 
   const { data: urgentScholarships } = trpc.scholarship.getUrgent.useQuery();
-  const { data: userProfile } = trpc.profile.get.useQuery();
+  const { data: _userProfile } = trpc.profile.get.useQuery();
   const { data: matches } = trpc.match.getMatches.useQuery();
   const { data: applications } = trpc.workflow.getApplications.useQuery();
   const generateEssay = trpc.assistant.generateEssay.useMutation();
@@ -66,18 +62,28 @@ export default function ScholarshipsPage() {
     return applications?.some((app) => app.scholarshipId === scholarshipId);
   };
 
-  const formatAmount = (amount: any) => {
+  type ScholarshipAmount = {
+    value?: number;
+    currency?: string;
+    type?: "fixed" | "range" | "full_tuition" | "partial" | "variable";
+    minAmount?: number;
+    maxAmount?: number;
+  };
+
+  const formatAmount = (amount: ScholarshipAmount | undefined | null) => {
     if (!amount) return "Amount not specified";
     if (amount.type === "full_tuition") return "Full Tuition";
     if (amount.type === "range") {
       return `$${amount.minAmount?.toLocaleString()} - $${amount.maxAmount?.toLocaleString()} ${amount.currency}`;
     }
-    return `$${amount.value.toLocaleString()} ${amount.currency}`;
+    return `$${amount.value?.toLocaleString() ?? 0} ${amount.currency ?? "USD"}`;
   };
 
-  const formatDeadline = (deadline: string) => {
+  const getDeadlineInfo = (deadline: string) => {
     const date = new Date(deadline);
-    const daysLeft = Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    // eslint-disable-next-line react-hooks/purity
+    const now = Date.now();
+    const daysLeft = Math.ceil((date.getTime() - now) / (1000 * 60 * 60 * 24));
     if (daysLeft < 0) return "Expired";
     if (daysLeft === 0) return "Today";
     if (daysLeft === 1) return "Tomorrow";
@@ -130,7 +136,7 @@ export default function ScholarshipsPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">Discover Scholarships</h1>
           <p className="text-muted-foreground">
-            Find and apply for scholarships that match your profile. AI-powered matching helps you focus on opportunities you're most likely to win.
+            Find and apply for scholarships that match your profile. AI-powered matching helps you focus on opportunities you&apos;re most likely to win.
           </p>
         </div>
 
@@ -320,7 +326,7 @@ export default function ScholarshipsPage() {
                           </div>
                           <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
                             <Clock className="h-4 w-4" />
-                            <span>{formatDeadline(scholarship.deadline)}</span>
+                            <span>{getDeadlineInfo(scholarship.deadline)}</span>
                           </div>
                         </div>
 
@@ -367,7 +373,7 @@ export default function ScholarshipsPage() {
                                   {eligibility.eligible === true ? (
                                     <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 text-sm px-3 py-1">
                                       <CheckCircle2 className="h-4 w-4 mr-1" />
-                                      You're Eligible
+                                      You&apos;re Eligible
                                     </Badge>
                                   ) : eligibility.eligible === false ? (
                                     <Badge variant="secondary" className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 text-sm px-3 py-1">
@@ -536,7 +542,7 @@ export default function ScholarshipsPage() {
                           {formatAmount(scholarship.amount)}
                         </span>
                         <span className="text-amber-600">
-                          {formatDeadline(scholarship.deadline)}
+                          {getDeadlineInfo(scholarship.deadline)}
                         </span>
                       </div>
                     </CardContent>

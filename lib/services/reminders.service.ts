@@ -9,9 +9,7 @@ export interface Reminder {
   daysLeft?: number;
 }
 
-export const generateReminders = (
-  applications: Application[]
-): Reminder[] => {
+export const generateReminders = (applications: Application[]): Reminder[] => {
   const reminders: Reminder[] = [];
 
   for (const app of applications) {
@@ -63,7 +61,7 @@ export const generateReminders = (
 };
 
 export const generateChecklist = (
-  _scholarshipDescription: string
+  _scholarshipDescription: string,
 ): string[] => {
   return [
     "Complete application form",

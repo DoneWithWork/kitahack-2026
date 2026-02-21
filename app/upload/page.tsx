@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -102,7 +108,8 @@ export default function UploadPage() {
             <CardHeader>
               <CardTitle>Upload New Transcript</CardTitle>
               <CardDescription>
-                Upload your SPM transcript for AI analysis and scholarship matching
+                Upload your SPM transcript for AI analysis and scholarship
+                matching
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -124,7 +131,9 @@ export default function UploadPage() {
               {uploadMethod === "file" ? (
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="transcript-file">Select transcript file (PDF or Image)</Label>
+                    <Label htmlFor="transcript-file">
+                      Select transcript file (PDF or Image)
+                    </Label>
                     <Input
                       id="transcript-file"
                       type="file"
@@ -138,19 +147,23 @@ export default function UploadPage() {
                     disabled={!file || uploadMutation.isPending}
                     className="w-full"
                   >
-                    {uploadMutation.isPending ? "Uploading..." : "Upload and Parse"}
+                    {uploadMutation.isPending
+                      ? "Uploading..."
+                      : "Upload and Parse"}
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="transcript-text">Paste transcript text</Label>
+                    <Label htmlFor="transcript-text">
+                      Paste transcript text
+                    </Label>
                     <Textarea
                       id="transcript-text"
                       value={text}
                       onChange={(e) => setText(e.target.value)}
                       placeholder="Paste your transcript text here..."
-                      className="mt-2 min-h-[200px]"
+                      className="mt-2 min-h-50"
                     />
                   </div>
                   <Button

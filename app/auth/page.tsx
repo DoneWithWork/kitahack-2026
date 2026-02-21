@@ -10,28 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { auth, db } from "@/lib/firebase/client";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-} from "firebase/firestore";
-import {
-  ArrowRight,
-  Chrome,
-  GraduationCap,
-  Loader2,
-  Lock,
-  Mail,
-  User,
-} from "lucide-react";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { Chrome, GraduationCap, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -39,7 +20,7 @@ import { useState } from "react";
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signInWithGoogle, user } = useAuth();
+  const { signInWithGoogle } = useAuth();
   const router = useRouter();
 
   const handleGoogleSignIn = async () => {
@@ -68,12 +49,6 @@ export default function AuthPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // For now, only Google Sign In is implemented
-    setError("Please use Google Sign In for now.");
   };
 
   return (
@@ -120,7 +95,7 @@ export default function AuthPage() {
           </div>
         </div>
 
-        {/* Right Side - Auth Form */}
+        {/* Right Side - Google Sign-In */}
         <Card className="border-slate-200 dark:border-slate-700 shadow-xl shadow-blue-100/50 dark:shadow-none">
           <CardHeader className="space-y-1">
             <div className="flex items-center justify-between lg:hidden mb-4">
@@ -135,171 +110,59 @@ export default function AuthPage() {
               <ModeToggle />
             </div>
             <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">
-              Welcome back
+              Welcome to ScholarGuide
             </CardTitle>
             <CardDescription className="text-slate-500 dark:text-slate-400">
-              Sign in to your account or create a new one
+              Sign in with your Google account to start finding scholarships
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             {error && (
-              <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 text-sm">
+              <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 text-sm border border-red-200 dark:border-red-800">
                 {error}
               </div>
             )}
 
-            <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
+            <Button
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              size="lg"
+              className="w-full h-12 bg-white hover:bg-slate-50 text-slate-900 border-2 border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-white dark:border-slate-700 font-semibold shadow-md hover:shadow-lg transition-all"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <Chrome className="mr-3 h-5 w-5" />
+                  Continue with Google
+                </>
+              )}
+            </Button>
 
-              <TabsContent value="signin">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="dark:text-slate-300">
-                      Email
-                    </Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="name@example.com"
-                        className="pl-10 dark:bg-slate-800 dark:border-slate-700"
-                        disabled
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="dark:text-slate-300">
-                      Password
-                    </Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        className="pl-10 dark:bg-slate-800 dark:border-slate-700"
-                        disabled
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white h-11"
-                    disabled={true}
-                  >
-                    Sign In with Email
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="signup">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="dark:text-slate-300">
-                      Full Name
-                    </Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input
-                        id="name"
-                        type="text"
-                        placeholder="John Doe"
-                        className="pl-10 dark:bg-slate-800 dark:border-slate-700"
-                        disabled
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="signup-email"
-                      className="dark:text-slate-300"
-                    >
-                      Email
-                    </Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="name@example.com"
-                        className="pl-10 dark:bg-slate-800 dark:border-slate-700"
-                        disabled
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="signup-password"
-                      className="dark:text-slate-300"
-                    >
-                      Password
-                    </Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="••••••••"
-                        className="pl-10 dark:bg-slate-800 dark:border-slate-700"
-                        disabled
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white h-11"
-                    disabled={true}
-                  >
-                    Create Account with Email
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
-
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator className="w-full dark:bg-slate-700" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white dark:bg-slate-900 px-2 text-slate-500 dark:text-slate-400">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
-              <Button
-                variant="outline"
-                className="w-full mt-4 h-11 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700"
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Chrome className="mr-2 h-4 w-4" />
-                )}
-                {isLoading ? "Signing in..." : "Continue with Google"}
-              </Button>
+            <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <p className="text-center text-sm text-slate-600 dark:text-slate-400">
+                ✨ No password needed. Just one click to access your dashboard.
+              </p>
+              <p className="text-center text-xs text-slate-500 dark:text-slate-500">
+                By signing in, you agree to our{" "}
+                <Link
+                  href="#"
+                  className="text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="#"
+                  className="text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  Privacy Policy
+                </Link>
+              </p>
             </div>
-
-            <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
-              By continuing, you agree to our{" "}
-              <Link href="#" className="text-blue-600 hover:underline">
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link href="#" className="text-blue-600 hover:underline">
-                Privacy Policy
-              </Link>
-            </p>
           </CardContent>
         </Card>
       </div>

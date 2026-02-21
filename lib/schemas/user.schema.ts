@@ -4,12 +4,13 @@ export const userSchema = z.object({
   uid: z.string(),
   email: z.string().email(),
   name: z.string().min(1),
-  citizenship: z.string().optional(),
   incomeBracket: z.enum(["low", "medium", "high"]).optional(),
   interests: z.array(z.string()).default([]),
   goals: z.string().optional(),
-  educationLevel: z.enum(["high_school", "undergraduate", "graduate", "postgraduate"]).optional(),
-  fieldOfStudy: z.string().optional(),
+  citizenship: z.string().optional(),
+  currentSchool: z.string().optional(),
+  graduationYear: z.number().min(2024).max(2035).optional(),
+  targetField: z.string().optional(),
   gpa: z.number().min(0).max(100).optional(),
   onboardingCompleted: z.boolean().default(false),
   onboardingStep: z.number().default(0),
@@ -21,12 +22,12 @@ export const userSchema = z.object({
 
 export const userProfileUpdateSchema = z.object({
   name: z.string().min(1).optional(),
-  citizenship: z.string().optional(),
   incomeBracket: z.enum(["low", "medium", "high"]).optional(),
   interests: z.array(z.string()).optional(),
   goals: z.string().optional(),
-  educationLevel: z.enum(["high_school", "undergraduate", "graduate", "postgraduate"]).optional(),
-  fieldOfStudy: z.string().optional(),
+  currentSchool: z.string().optional(),
+  graduationYear: z.number().min(2024).max(2035).optional(),
+  targetField: z.string().optional(),
   gpa: z.number().min(0).max(100).optional(),
   onboardingCompleted: z.boolean().optional(),
   onboardingStep: z.number().optional(),
@@ -35,10 +36,10 @@ export const userProfileUpdateSchema = z.object({
 });
 
 export const onboardingProfileSchema = z.object({
-  citizenship: z.string().min(1),
+  currentSchool: z.string().min(1),
+  graduationYear: z.number().min(2024).max(2035),
+  targetField: z.string().min(1),
   incomeBracket: z.enum(["low", "medium", "high"]),
-  educationLevel: z.enum(["high_school", "undergraduate", "graduate", "postgraduate"]),
-  fieldOfStudy: z.string().min(1),
   interests: z.array(z.string()).min(1),
   goals: z.string().min(10),
 });

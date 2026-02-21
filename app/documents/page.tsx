@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { trpc } from "@/lib/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -19,14 +20,13 @@ import {
   Trash2, 
   ExternalLink, 
   CheckCircle2,
-  AlertCircle,
   Loader2,
   Eye,
   FileIcon,
-  Image as ImageIcon,
   FileType
 } from "lucide-react";
 import Link from "next/link";
+import type { Document, DocumentUploadInput } from "@/lib/schemas/document.schema";
 
 const documentTypes = [
   { value: "transcript", label: "Academic Transcript", icon: GraduationCap, color: "blue" },
@@ -43,7 +43,7 @@ export default function DocumentsPage() {
   const [documentName, setDocumentName] = useState("");
   const [documentDescription, setDocumentDescription] = useState("");
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
 
   const { data: allDocuments, refetch: refetchDocuments } = trpc.document.getAll.useQuery();
   const { data: certificates } = trpc.document.getByType.useQuery({ type: "certificate" });
@@ -84,8 +84,9 @@ export default function DocumentsPage() {
       if (!response.ok) throw new Error("Upload failed");
 
       const { url } = await response.json();
+      const docType = documentType as DocumentUploadInput["type"];
       await uploadMutation.mutateAsync({
-        type: documentType as any,
+        type: docType,
         name: documentName || selectedFile.name,
         description: documentDescription,
         fileUrl: url,
@@ -113,7 +114,7 @@ export default function DocumentsPage() {
     }
   };
 
-  const renderDocumentCard = (doc: any) => {
+  const renderDocumentCard = (doc: Document) => {
     const typeInfo = getDocumentTypeInfo(doc.type);
     const Icon = typeInfo.icon;
 
@@ -144,17 +145,17 @@ export default function DocumentsPage() {
 
               {doc.extractedData && Object.keys(doc.extractedData).length > 0 && (
                 <div className="mt-3 p-3 rounded-lg bg-muted text-sm">
-                  {doc.extractedData.certificateName && (
-                    <p><span className="font-medium">Certificate:</span> {doc.extractedData.certificateName}</p>
+                  {typeof (doc.extractedData as Record<string, unknown>).certificateName === "string" && (
+                    <p><span className="font-medium">Certificate:</span> {String((doc.extractedData as Record<string, unknown>).certificateName)}</p>
                   )}
-                  {doc.extractedData.issuer && (
-                    <p><span className="font-medium">Issuer:</span> {doc.extractedData.issuer}</p>
+                  {typeof (doc.extractedData as Record<string, unknown>).issuer === "string" && (
+                    <p><span className="font-medium">Issuer:</span> {String((doc.extractedData as Record<string, unknown>).issuer)}</p>
                   )}
-                  {doc.extractedData.issueDate && (
-                    <p><span className="font-medium">Date:</span> {new Date(doc.extractedData.issueDate).toLocaleDateString()}</p>
+                  {typeof (doc.extractedData as Record<string, unknown>).issueDate === "string" && (
+                    <p><span className="font-medium">Date:</span> {new Date(String((doc.extractedData as Record<string, unknown>).issueDate)).toLocaleDateString()}</p>
                   )}
-                  {doc.extractedData.grade && (
-                    <p><span className="font-medium">Grade:</span> {doc.extractedData.grade}</p>
+                  {typeof (doc.extractedData as Record<string, unknown>).grade === "string" && (
+                    <p><span className="font-medium">Grade:</span> {String((doc.extractedData as Record<string, unknown>).grade)}</p>
                   )}
                 </div>
               )}
@@ -182,11 +183,14 @@ export default function DocumentsPage() {
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       {doc.mimeType.startsWith("image/") ? (
-                        <img
-                          src={doc.fileUrl}
-                          alt={doc.name}
-                          className="w-full rounded-lg border"
-                        />
+                        <div className="relative w-full aspect-video rounded-lg overflow-hidden border">
+                          <Image
+                            src={doc.fileUrl}
+                            alt={doc.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
                       ) : (
                         <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
                           <FileText className="h-16 w-16 text-muted-foreground" />

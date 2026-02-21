@@ -1,5 +1,5 @@
 import { getAdminDb } from "@/lib/firebase/admin";
-import { getUser, updateUser } from "@/lib/repositories/users.repo";
+import { updateUser } from "@/lib/repositories/users.repo";
 import { onboardingProfileSchema } from "@/lib/schemas/user.schema";
 import { protectedProcedure, router } from "@/lib/trpc/server";
 import { now } from "@/lib/utils/dates";
@@ -19,10 +19,10 @@ export const onboardingRouter = router({
       onboardingCompleted: user.onboardingCompleted || false,
       onboardingStep: user.onboardingStep || 0,
       profileComplete: !!(
-        user.citizenship &&
+        user.currentSchool &&
+        user.graduationYear &&
+        user.targetField &&
         user.incomeBracket &&
-        user.educationLevel &&
-        user.fieldOfStudy &&
         user.interests?.length > 0
       ),
       documentsUploaded: user.documentsUploaded || false,

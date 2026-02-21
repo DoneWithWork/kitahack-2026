@@ -26,7 +26,7 @@ export const getUser = async (uid: string): Promise<User | null> => {
 
 export const updateUser = async (
   uid: string,
-  data: Partial<User>
+  data: Partial<User>,
 ): Promise<void> => {
   try {
     await adminDb()

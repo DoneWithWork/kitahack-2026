@@ -1,13 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { trpc } from "@/lib/trpc/client";
+import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { trpc } from "@/lib/trpc/client";
 import Link from "next/link";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useState } from "react";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -25,9 +31,11 @@ export default function ProfilePage() {
   const handleUpdate = async () => {
     await updateMutation.mutateAsync({
       name: formData.name,
-      citizenship: formData.citizenship,
       incomeBracket: formData.incomeBracket,
-      interests: formData.interests.split(",").map((i) => i.trim()).filter(Boolean),
+      interests: formData.interests
+        .split(",")
+        .map((i) => i.trim())
+        .filter(Boolean),
       goals: formData.goals,
     });
   };
@@ -62,38 +70,40 @@ export default function ProfilePage() {
                 <div className="space-y-4">
                   <div>
                     <Label>Email</Label>
-                    <Input value={profileQuery.data.email} disabled className="mt-2" />
+                    <Input
+                      value={profileQuery.data.email}
+                      disabled
+                      className="mt-2"
+                    />
                   </div>
                   <div>
                     <Label htmlFor="name">Full Name</Label>
                     <Input
                       id="name"
                       value={formData.name || profileQuery.data.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="mt-2"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="citizenship">Citizenship</Label>
-                    <Input
-                      id="citizenship"
-                      value={formData.citizenship || profileQuery.data.citizenship || ""}
                       onChange={(e) =>
-                        setFormData({ ...formData, citizenship: e.target.value })
+                        setFormData({ ...formData, name: e.target.value })
                       }
-                      placeholder="e.g., Malaysian"
                       className="mt-2"
                     />
                   </div>
+
                   <div>
                     <Label htmlFor="income">Income Bracket</Label>
                     <select
                       id="income"
-                      value={formData.incomeBracket || profileQuery.data.incomeBracket || "medium"}
+                      value={
+                        formData.incomeBracket ||
+                        profileQuery.data.incomeBracket ||
+                        "medium"
+                      }
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          incomeBracket: e.target.value as "low" | "medium" | "high",
+                          incomeBracket: e.target.value as
+                            | "low"
+                            | "medium"
+                            | "high",
                         })
                       }
                       className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2"
@@ -130,7 +140,7 @@ export default function ProfilePage() {
                         setFormData({ ...formData, goals: e.target.value })
                       }
                       placeholder="Describe your career aspirations..."
-                      className="mt-2 w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2"
+                      className="mt-2 w-full min-h-25 rounded-md border border-input bg-background px-3 py-2"
                     />
                   </div>
                   <Button
@@ -142,7 +152,9 @@ export default function ProfilePage() {
                   </Button>
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground">Loading profile...</p>
+                <p className="text-center text-muted-foreground">
+                  Loading profile...
+                </p>
               )}
             </CardContent>
           </Card>

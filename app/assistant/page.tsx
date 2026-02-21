@@ -459,11 +459,11 @@ export default function AssistantPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
-                  <span>Show, don't tell - use specific examples and stories</span>
+                  <span>Show, don&apos;t tell - use specific examples and stories</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
-                  <span>Connect your experiences to the scholarship's mission</span>
+                  <span>Connect your experiences to the scholarship&apos;s mission</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
