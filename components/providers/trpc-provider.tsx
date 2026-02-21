@@ -1,10 +1,10 @@
 "use client";
 
+import { auth } from "@/lib/firebase/client";
+import { trpc } from "@/lib/trpc/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
-import { auth, auth as firebaseAuth } from "@/lib/firebase/client";
 import { useState } from "react";
-import { trpc } from "@/lib/trpc/client";
 
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());

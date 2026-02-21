@@ -20,7 +20,7 @@ export const transcriptRouter = router({
 
   uploadFromPDF: protectedProcedure
     .input(z.object({ gcsUri: z.string() }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({}) => {
       return { success: true };
     }),
 

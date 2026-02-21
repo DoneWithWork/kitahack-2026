@@ -10,7 +10,7 @@ const groundingTool = {
 
 type CallGeminiProps<T> = {
   prompt: string;
-  model?: "gemini-2.5-flash-lite";
+  model?: "gemini-2.5-flash-lite" | "gemini-3-flash-preview";
   schema: z.ZodType<T>;
 };
 
@@ -36,8 +36,34 @@ export async function CallGemini<T>({
   const data = schema.parse(JSON.parse(response.text));
   return data;
 }
+export async function CallGeminiWithTool<T>({
+  prompt,
+  model = "gemini-3-flash-preview",
+  schema,
+}: CallGeminiProps<T>): Promise<T> {
+  const response = await ai.models.generateContent({
+    model,
+    contents: prompt,
+    config: {
+      responseJsonSchema: z.toJSONSchema(schema),
+      responseMimeType: "application/json",
+      tools: [groundingTool],
+    },
+  });
+
+  if (!response.text) {
+    throw new Error("Empty model response");
+  }
+
+  const text = response.text;
+  console.log("Raw model response:", text);
+  if (!text) {
+    throw new Error("No text response from Gemini");
+  }
+  return schema.parse(JSON.parse(text));
+}
 type ExtractTextProps<T> = {
-  model?: "gemini-2.5-flash-lite";
+  model?: "gemini-2.5-flash-lite" | "gemini-3-flash-preview";
   schema: z.ZodType<T>;
   buffer: Buffer<ArrayBuffer>;
   file: File;

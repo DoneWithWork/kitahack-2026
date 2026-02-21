@@ -1,12 +1,12 @@
 import { generateContent } from "@/lib/ai/gemini";
 import { logger } from "@/lib/utils/logger";
 import type { User } from "@/lib/schemas/user.schema";
-import type { Scholarship } from "@/lib/schemas/scholarship.schema";
+import { Scholarship } from "../scholarships/constants";
 
 export const generateEssayDraft = async (
   user: User,
   scholarship: Scholarship,
-  prompt: string
+  prompt: string,
 ): Promise<string> => {
   try {
     const systemInstruction = `You are an expert scholarship essay advisor. Help students write compelling scholarship essays based on their profile and the scholarship requirements. Be encouraging but honest. Focus on authentic storytelling that highlights the student's unique qualities.`;
@@ -42,7 +42,7 @@ Draft Essay:
 
 export const refineEssay = async (
   currentEssay: string,
-  feedback: string
+  feedback: string,
 ): Promise<string> => {
   try {
     const systemInstruction = `You are an expert essay editor. Help students improve their scholarship essays based on specific feedback. Maintain the student's voice while enhancing clarity, impact, and flow.`;
@@ -67,7 +67,7 @@ Refined Essay:
 };
 
 export const generateInterviewQuestions = async (
-  scholarship: Scholarship
+  scholarship: Scholarship,
 ): Promise<string[]> => {
   try {
     const prompt = `
@@ -93,7 +93,7 @@ Provide the questions in a numbered list format.
 
 export const generateInterviewAnswer = async (
   user: User,
-  question: string
+  question: string,
 ): Promise<string> => {
   try {
     const systemInstruction = `You are an interview coach. Help students prepare strong answers to scholarship interview questions. Provide a framework for answering, not a script to memorize.`;

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { auth } from "@/lib/firebase/client";
 import { trpc } from "@/lib/trpc/client";
 import {
   AlertCircle,
@@ -117,14 +118,14 @@ export default function DashboardPage() {
       type: "warning",
     },
   ];
-
+  const user = auth.currentUser;
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            Welcome back, Sudarsan!
+            Welcome back, {user?.displayName || "User"}!
           </h1>
           <p className="text-muted-foreground mt-1">
             Here&apos;s what&apos;s happening with your scholarship journey.
@@ -208,7 +209,7 @@ export default function DashboardPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-8 mt-6">
-          {/* Banner */}
+          {/* Banner
           <Card className="bg-linear-to-r from-yellow-300 to-yellow-200 dark:from-yellow-700 dark:to-yellow-600 border-0 overflow-hidden">
             <CardContent className="p-6 lg:p-8">
               <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
@@ -229,8 +230,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </CardContent>
-          </Card>
-
+          </Card> */}
           {/* Main Content Grid */}
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Recent Activity */}
@@ -307,7 +307,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </div>
-
           {/* Recommended Scholarships */}
           <div>
             <div className="flex items-center justify-between mb-6">
@@ -361,7 +360,6 @@ export default function DashboardPage() {
               ))}
             </div>
           </div>
-
           {/* Destinations & Partnerships */}
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Destinations */}

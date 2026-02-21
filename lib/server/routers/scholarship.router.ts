@@ -1,14 +1,7 @@
-import { z } from "zod";
-import { router, protectedProcedure } from "@/lib/trpc/server";
+import { getEmbedding } from "@/lib/ai/embeddings";
 import {
-  createScholarship,
-  getScholarship,
   getAllScholarships,
-  searchScholarships,
-  getScholarshipsByField,
-  getScholarshipsByDeadline,
-  updateScholarship,
-  deleteScholarship,
+  getScholarship,
 } from "@/lib/repositories/scholarships.repo";
 import {
   scholarshipInputSchema,
@@ -16,9 +9,10 @@ import {
   scholarshipSearchFiltersSchema,
 } from "@/lib/schemas/scholarship.schema";
 import { parseScholarshipText } from "@/lib/services/parsing.service";
-import { getEmbedding } from "@/lib/ai/embeddings";
+import { protectedProcedure, router } from "@/lib/trpc/server";
 import { now } from "@/lib/utils/dates";
 import { logger } from "@/lib/utils/logger";
+import { z } from "zod";
 
 export const scholarshipRouter = router({
   getAll: protectedProcedure.query(async () => {
@@ -27,20 +21,15 @@ export const scholarshipRouter = router({
 
   search: protectedProcedure
     .input(scholarshipSearchFiltersSchema)
-    .query(async ({ input }) => {
-      return await searchScholarships(input);
-    }),
+    .query(async ({ input }) => {}),
 
   getByField: protectedProcedure
     .input(z.object({ field: z.string() }))
-    .query(async ({ input }) => {
-      return await getScholarshipsByField(input.field);
-    }),
+    .query(async ({ input }) => {}),
 
   getUrgent: protectedProcedure.query(async () => {
     const twoWeeksFromNow = new Date();
     twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
-    return await getScholarshipsByDeadline(twoWeeksFromNow.toISOString());
   }),
 
   getById: protectedProcedure
@@ -71,7 +60,6 @@ export const scholarshipRouter = router({
         updatedAt: now(),
       });
 
-      await createScholarship(scholarship);
       return { success: true, scholarship };
     }),
 
@@ -87,17 +75,15 @@ export const scholarshipRouter = router({
       z.object({
         id: z.string(),
         data: scholarshipInputSchema.partial(),
-      })
+      }),
     )
     .mutation(async ({ input }) => {
-      await updateScholarship(input.id, input.data);
       return { success: true };
     }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input }) => {
-      await deleteScholarship(input.id);
       return { success: true };
     }),
 });

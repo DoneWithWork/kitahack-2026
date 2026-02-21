@@ -1,22 +1,16 @@
+import { auth } from "@/lib/firebase/client";
 import { trpc } from "@/lib/trpc/client";
-import {
-  BookOpen,
-  Upload,
-  Loader2,
-  X,
-  ChevronRight,
-} from "lucide-react";
+import { BookOpen, ChevronRight, Loader2, Upload, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import {
   Card,
+  CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
 } from "../ui/card";
 import { Input } from "../ui/input";
-import { auth } from "@/lib/firebase/client";
 
 export function TranscriptStep({
   onNext,

@@ -1,5 +1,3 @@
-import { trpc } from "@/lib/trpc/client";
-import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -7,18 +5,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { auth } from "@/lib/firebase/client";
+import { trpc } from "@/lib/trpc/client";
 import {
   Award,
-  Badge,
   CheckCircle2,
-  ChevronLeft,
   ChevronRight,
   Loader2,
   Upload,
 } from "lucide-react";
-import { Input } from "../ui/input";
+import { useState } from "react";
 import { Button } from "../ui/button";
-import { auth } from "@/lib/firebase/client";
+import { Input } from "../ui/input";
 export function DocumentsStep({
   onNext,
   onBack,
