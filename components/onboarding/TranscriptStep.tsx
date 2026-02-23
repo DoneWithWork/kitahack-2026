@@ -14,8 +14,6 @@ import { Input } from "../ui/input";
 
 export function TranscriptStep({
   onNext,
-  onBack: _onBack,
-  canGoBack: _canGoBack,
 }: {
   onNext: () => void;
   onBack: () => void;

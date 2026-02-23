@@ -1,16 +1,16 @@
 import { adminDb } from "@/lib/firebase/admin";
-import type { ScholarshipSearchFilters } from "@/lib/schemas/scholarship.schema";
 import { logger } from "@/lib/utils/logger";
-import { Scholarship } from "../scholarships/constants";
+import type { Scholarship } from "@/lib/schemas/application.schema";
 const SCHOLARSHIPS_COLLECTION = "scholarships";
 export const createScholarship = async (
   scholarship: Scholarship,
 ): Promise<void> => {
   try {
+    const id = crypto.randomUUID();
     await adminDb()
       .collection(SCHOLARSHIPS_COLLECTION)
-      .doc(scholarship.uid)
-      .set(scholarship);
+      .doc(id)
+      .set({ ...scholarship, createdAt: new Date().toISOString() });
   } catch (error) {
     throw error;
   }

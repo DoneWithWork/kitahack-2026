@@ -61,6 +61,7 @@ export const generateReminders = (applications: Application[]): Reminder[] => {
 };
 
 export const generateChecklist = (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _scholarshipDescription: string,
 ): string[] => {
   return [

@@ -1,6 +1,6 @@
 # [Discovery]
-- Need to populate the scholarship db with working proper scholarships for year 2025 in order for this to actually work
-- certain fields may need to be hard coded such as grades for requirements as most scholarship requirements are not structured. 
+<!-- - Need to populate the scholarship db with working proper scholarships for year 2025 in order for this to actually work -->
+<!-- - certain fields may need to be hard coded such as grades for requirements as most scholarship requirements are not structured.  -->
 
 # [Eligibility Simplifier]
 - Ensure eligibility for the current user and have a filter to show eligible scholarships based on current profile
@@ -12,4 +12,6 @@
 
 # [Scenario based]
 - Would have different states, essay (due date), role play for group study and interview markers 
+
+
 

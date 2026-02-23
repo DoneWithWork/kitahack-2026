@@ -34,7 +34,6 @@ export const onboardingRouter = router({
     .input(onboardingProfileSchema)
     .mutation(async ({ ctx, input }) => {
       console.log("user:", ctx.user);
-      const uid = ctx.user!.uid;
 
       await updateUser(ctx.user!.uid, {
         ...input,

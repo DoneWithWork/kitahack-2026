@@ -70,7 +70,6 @@ type ExtractTextProps<T> = {
   prompt: string;
 };
 export async function extractText<T>({
-  model = "gemini-2.5-flash-lite",
   schema,
   buffer,
   file,

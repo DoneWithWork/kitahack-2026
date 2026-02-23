@@ -18,10 +18,7 @@ export const createDocument = async (document: Document): Promise<void> => {
 
 export const getDocument = async (id: string): Promise<Document | null> => {
   try {
-    const doc = await adminDb()
-      .collection(DOCUMENTS_COLLECTION)
-      .doc(id)
-      .get();
+    const doc = await adminDb().collection(DOCUMENTS_COLLECTION).doc(id).get();
     if (!doc.exists) return null;
     return doc.data() as Document;
   } catch (error) {
@@ -46,13 +43,12 @@ export const getDocumentsByUser = async (uid: string): Promise<Document[]> => {
 
 export const getDocumentsByType = async (
   uid: string,
-  type: string
+  type: string,
 ): Promise<Document[]> => {
   try {
     const snapshot = await adminDb()
-      .collection(DOCUMENTS_COLLECTION)
+      .collection(type)
       .where("uid", "==", uid)
-      .where("type", "==", type)
       .orderBy("uploadedAt", "desc")
       .get();
     return snapshot.docs.map((doc) => doc.data() as Document);
@@ -64,13 +60,10 @@ export const getDocumentsByType = async (
 
 export const updateDocument = async (
   id: string,
-  data: Partial<Document>
+  data: Partial<Document>,
 ): Promise<void> => {
   try {
-    await adminDb()
-      .collection(DOCUMENTS_COLLECTION)
-      .doc(id)
-      .update(data);
+    await adminDb().collection(DOCUMENTS_COLLECTION).doc(id).update(data);
   } catch (error) {
     logger.error({ error, id }, "Error updating document");
     throw error;

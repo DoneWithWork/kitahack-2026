@@ -37,7 +37,7 @@ async function validateUrl(url: string): Promise<boolean> {
 export const scholarshipScrapeRouter = router({
   scrape: protectedProcedure
     .input(scrapeSchema)
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       try {
         const urlsResponse = await CallGeminiWithTool({
           prompt: scholarshipPromptOne.replace("{{SEARCH_TERM}}", input.search),

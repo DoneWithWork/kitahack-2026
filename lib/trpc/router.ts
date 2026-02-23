@@ -9,6 +9,8 @@ import { workflowRouter } from "@/lib/server/routers/workflow.router";
 import { documentRouter } from "@/lib/server/routers/document.router";
 import { onboardingRouter } from "@/lib/server/routers/onboarding.router";
 import { scholarshipScrapeRouter } from "../server/routers/scrape.route";
+import { applicationRouter } from "@/lib/server/routers/application.router";
+import { adminRouter } from "@/lib/server/routers/admin.router";
 
 export const appRouter = router({
   authentication: authenticationRouter,
@@ -21,6 +23,8 @@ export const appRouter = router({
   workflow: workflowRouter,
   document: documentRouter,
   onboarding: onboardingRouter,
+  application: applicationRouter,
+  admin: adminRouter,
 });
 
 export type AppRouter = typeof appRouter;

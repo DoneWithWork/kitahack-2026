@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -20,10 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Scholarship } from "@/lib/schemas/scholarship.schema";
 import { trpc } from "@/lib/trpc/client";
+import { useRouter } from "next/navigation";
 import {
-  ArrowRight,
   Award,
   CheckCircle2,
   ChevronDown,
@@ -41,13 +39,6 @@ import {
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-const STUDY_LEVELS = [
-  "high_school",
-  "undergraduate",
-  "graduate",
-  "postgraduate",
-] as const;
-
 const BENEFIT_OPTIONS = [
   "Tuition",
   "Accommodation",
@@ -60,6 +51,13 @@ const BENEFIT_OPTIONS = [
 
 const RISK_LEVELS = ["LOW", "MEDIUM", "HIGH"] as const;
 
+interface ScholarshipExtras {
+  tags?: string[];
+  fieldsAllowed?: string[];
+  educationLevels?: string[];
+  amount?: string | { value?: number; currency?: string };
+}
+
 export default function ScholarshipsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedField, setSelectedField] = useState<string>("");
@@ -68,51 +66,45 @@ export default function ScholarshipsPage() {
   const [selectedRisk, setSelectedRisk] = useState<string>("");
   const [selectedDeadline, setSelectedDeadline] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedScholarship, setSelectedScholarship] =
-    useState<Scholarship | null>(null);
-  const [applicationText, setApplicationText] = useState("");
 
   const { data: scholarships, isLoading } = trpc.scholarship.getAll.useQuery();
 
-  const { data: _userProfile } = trpc.profile.get.useQuery();
   const { data: matches } = trpc.match.getMatches.useQuery();
-  const { data: applications } = trpc.workflow.getApplications.useQuery();
-  const generateEssay = trpc.assistant.generateEssay.useMutation();
-  const startApplication = trpc.workflow.startApplication.useMutation();
-  const searchScholarships = trpc.scrape.scrape.useMutation();
+  const { data: userApplications } =
+    trpc.application.getUserApplications.useQuery();
+
+  const startApplication = trpc.application.startApplication.useMutation();
+  const router = useRouter();
 
   const filteredScholarships = useMemo(() => {
     if (!scholarships) return [];
 
     return scholarships.filter((scholarship) => {
       const query = searchQuery.toLowerCase();
+      const ext = scholarship as typeof scholarship & ScholarshipExtras;
       const benefitsText = Array.isArray(scholarship.benefits)
         ? scholarship.benefits.join(" ")
         : scholarship.benefits || "";
-      const tagsText = (scholarship as any).tags
-        ? (scholarship as any).tags.join(" ")
+      const tagsText = ext.tags
+        ? ext.tags.join(" ")
         : "";
 
       const matchesSearch =
         !query ||
         scholarship.title.toLowerCase().includes(query) ||
-        scholarship.provider.toLowerCase().includes(query) ||
+        scholarship.provider!.toLowerCase().includes(query) ||
         (scholarship.description || "").toLowerCase().includes(query) ||
         benefitsText.toLowerCase().includes(query) ||
         tagsText.toLowerCase().includes(query);
 
-      const scholarshipFields = (scholarship as any).fieldsAllowed
-        ? (scholarship as any).fieldsAllowed
-        : [];
+      const scholarshipFields = ext.fieldsAllowed ?? [];
       const matchesField =
         !selectedField ||
         scholarshipFields.some((f: string) =>
           f.toLowerCase().includes(selectedField.toLowerCase()),
         );
 
-      const scholarshipLevels = (scholarship as any).educationLevels
-        ? (scholarship as any).educationLevels
-        : [];
+      const scholarshipLevels = ext.educationLevels ?? [];
       const matchesLevel =
         !selectedLevel || scholarshipLevels.includes(selectedLevel);
 
@@ -129,7 +121,7 @@ export default function ScholarshipsPage() {
         (() => {
           if (!scholarship.deadline) return true;
           const deadline = new Date(scholarship.deadline);
-          let now = new Date();
+          const now = new Date();
           now.setFullYear(2023);
           const daysLeft = Math.ceil(
             (deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
@@ -174,10 +166,6 @@ export default function ScholarshipsPage() {
     return { eligible: match.eligible, reasons: match.reasons };
   };
 
-  const isApplied = (scholarshipId: string) => {
-    return applications?.some((app) => app.scholarshipId === scholarshipId);
-  };
-
   const getDeadlineInfo = (deadline: string) => {
     const date = new Date(deadline);
     if (isNaN(date.getTime())) return "-";
@@ -206,16 +194,25 @@ export default function ScholarshipsPage() {
     }
   };
 
-  const handleGenerateEssay = async () => {
-    if (!selectedScholarship) return;
-    await generateEssay.mutateAsync({
-      scholarshipId: selectedScholarship.uid,
-      prompt: applicationText,
-    });
-  };
-
   const handleStartApplication = async (scholarshipId: string) => {
-    await startApplication.mutateAsync({ scholarshipId });
+    try {
+      const result = await startApplication.mutateAsync({ scholarshipId });
+      router.push(`/dashboard/application/${result.applicationId}/essay`);
+    } catch (error: unknown) {
+      const err = error as { message?: string; data?: { code?: string } };
+      if (err.message?.includes("already applied")) {
+        const existingApp = userApplications?.find(
+          (app) => app.scholarshipId === scholarshipId,
+        );
+        if (existingApp) {
+          router.push(
+            `/dashboard/application/${existingApp.applicationId}/${existingApp.currentStage}`,
+          );
+          return;
+        }
+      }
+      console.error("Error starting application:", error);
+    }
   };
 
   const clearFilters = () => {
@@ -463,116 +460,146 @@ export default function ScholarshipsPage() {
                 )}
               </Card>
             ) : (
-              <div className="grid md:grid-cols-2 gap-6">
-                {filteredScholarships.map((scholarship) => {
-                  const eligibility = getEligibilityStatus(scholarship.uid);
-                  const applied = isApplied(scholarship.uid);
+              scholarships && (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {filteredScholarships.map((scholarship) => {
+                    const ext = scholarship as typeof scholarship & ScholarshipExtras;
+                    const eligibility = getEligibilityStatus(
+                      scholarship.uid || "",
+                    );
+                    const userApp = userApplications?.find(
+                      (app) => app.scholarshipId === scholarship.uid,
+                    );
+                    const isCompleted =
+                      userApp?.status === "completed" ||
+                      userApp?.status === "accepted";
 
-                  return (
-                    <Card
-                      key={scholarship.uid}
-                      className="group flex flex-col h-full overflow-hidden border border-border/60 rounded-2xl backdrop-blur transition-all hover:shadow-xl"
-                    >
-                      <CardHeader className="space-y-1.5 px-6 pt-6 pb-0">
-                        <CardTitle className="text-xl font-semibold leading-tight line-clamp-2 min-h-16">
-                          {scholarship.title}
-                        </CardTitle>
+                    return (
+                      <Card
+                        key={scholarship.uid}
+                        className="group flex flex-col h-full overflow-hidden border border-border/60 rounded-2xl backdrop-blur transition-all hover:shadow-xl"
+                      >
+                        <CardHeader className="space-y-1.5 px-6 pt-6 pb-0">
+                          <CardTitle className="text-xl font-semibold leading-tight line-clamp-2 min-h-16">
+                            {scholarship.title}
+                          </CardTitle>
 
-                        <div className="flex items-center justify-between">
-                          <CardDescription className="text-sm text-muted-foreground line-clamp-1">
-                            {scholarship.provider}
-                          </CardDescription>
-                          <div className="flex items-center gap-2">
-                            {getRiskIcon(scholarship.risk?.riskLevel)}
-                            <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                              <Clock className="h-4 w-4" />
-                              {getDeadlineInfo(scholarship.deadline)}
+                          <div className="flex items-center justify-between">
+                            <CardDescription className="text-sm text-muted-foreground line-clamp-1">
+                              {scholarship.provider}
+                            </CardDescription>
+                            <div className="flex items-center gap-2">
+                              {getRiskIcon(scholarship.risk?.riskLevel)}
+                              <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                                <Clock className="h-4 w-4" />
+                                {getDeadlineInfo(scholarship.deadline ?? "")}
+                              </span>
+                            </div>
+                          </div>
+                        </CardHeader>
+
+                        <CardContent className="flex flex-col gap-5 px-6 flex-1">
+                          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                            {scholarship.description}
+                          </p>
+
+                          <div className="flex flex-wrap items-center gap-3 text-sm font-medium">
+                            <span className="text-green-600 dark:text-green-400">
+                              {typeof ext.amount === "object" && ext.amount?.value
+                                ? `${ext.amount.currency} ${ext.amount.value.toLocaleString()}`
+                                : scholarship.amount || scholarship.benefits}
                             </span>
                           </div>
-                        </div>
-                      </CardHeader>
 
-                      <CardContent className="flex flex-col gap-5 px-6 flex-1">
-                        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                          {scholarship.description}
-                        </p>
+                          {(ext.tags || []).length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {(ext.tags || [])
+                                .slice(0, 4)
+                                .map((tag: string) => (
+                                  <Badge
+                                    key={tag}
+                                    variant="secondary"
+                                    className="text-xs px-3 py-1 rounded-xl"
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ))}
+                            </div>
+                          )}
 
-                        <div className="flex flex-wrap items-center gap-3 text-sm font-medium">
-                          <span className="text-green-600 dark:text-green-400">
-                            {(scholarship as any).amount?.value
-                              ? `${(scholarship as any).amount.currency} ${(scholarship as any).amount.value.toLocaleString()}`
-                              : scholarship.amount || scholarship.benefits}
-                          </span>
-                        </div>
+                          {eligibility.reasons.length > 0 && (
+                            <p className="text-xs text-red-500 dark:text-red-400 leading-relaxed">
+                              {eligibility.reasons.join(" • ")}
+                            </p>
+                          )}
+                        </CardContent>
 
-                        {((scholarship as any).tags || []).length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {((scholarship as any).tags || [])
-                              .slice(0, 4)
-                              .map((tag: string) => (
-                                <Badge
-                                  key={tag}
-                                  variant="secondary"
-                                  className="text-xs px-3 py-1 rounded-xl"
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
+                        <div className="border-t border-border/60 p-4 bg-muted/20 flex flex-col gap-3">
+                          <div className="flex gap-3">
+                            <Link
+                              href={scholarship.applicationLink || "#"}
+                              className="flex-1"
+                            >
+                              <Button
+                                variant="outline"
+                                className="rounded-xl font-medium w-full"
+                              >
+                                View Details
+                              </Button>
+                            </Link>
+
+                            {isCompleted ? (
+                              <Button
+                                disabled
+                                variant="outline"
+                                className="rounded-xl flex-1"
+                              >
+                                <CheckCircle2 className="h-4 w-4 mr-2" />
+                                Application Completed
+                              </Button>
+                            ) : userApp ? (
+                              <Button
+                                onClick={() =>
+                                  router.push(
+                                    `/dashboard/application/${userApp.applicationId}/${userApp.currentStage}`,
+                                  )
+                                }
+                                className="rounded-xl flex-1"
+                              >
+                                Resume Application
+                              </Button>
+                            ) : eligibility.eligible ? (
+                              <Button
+                                onClick={() =>
+                                  handleStartApplication(scholarship.uid || "")
+                                }
+                                disabled={startApplication.isPending}
+                                className="rounded-xl flex-1"
+                              >
+                                Begin Selection Process
+                              </Button>
+                            ) : (
+                              <Button
+                                disabled
+                                variant="outline"
+                                className="rounded-xl flex-1"
+                              >
+                                <XCircle className="h-4 w-4 mr-2" />
+                                Not Eligible
+                              </Button>
+                            )}
                           </div>
-                        )}
-
-                        {eligibility.reasons.length > 0 && (
-                          <p className="text-xs text-red-500 dark:text-red-400 leading-relaxed">
-                            {eligibility.reasons.join(" • ")}
-                          </p>
-                        )}
-                      </CardContent>
-
-                      <div className="border-t border-border/60 p-4 bg-muted/20 flex gap-3">
-                        <Link
-                          href={scholarship.applicationLink || "#"}
-                          className="w-full block"
-                        >
-                          <Button className="rounded-xl font-medium w-full">
-                            View Details
-                          </Button>
-                        </Link>
-
-                        {applied ? (
-                          <Button
-                            disabled
-                            variant="outline"
-                            size="icon"
-                            className="rounded-xl"
-                          >
-                            <CheckCircle2 className="h-4 w-4" />
-                          </Button>
-                        ) : eligibility.eligible ? (
-                          <Button
-                            size="icon"
-                            onClick={() =>
-                              handleStartApplication(scholarship.uid)
-                            }
-                            disabled={startApplication.isPending}
-                            className="rounded-xl"
-                          >
-                            <ArrowRight className="h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <Button
-                            disabled
-                            variant="outline"
-                            size="icon"
-                            className="rounded-xl"
-                          >
-                            <XCircle className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
+                          {!isCompleted && !userApp && (
+                            <p className="text-xs text-muted-foreground text-center">
+                              Multi-stage evaluation process
+                            </p>
+                          )}
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )
             )}
           </TabsContent>
         </Tabs>

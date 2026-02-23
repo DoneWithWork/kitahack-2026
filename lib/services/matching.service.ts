@@ -1,10 +1,4 @@
-import { cosineSimilarity } from "@/lib/utils/math";
-import { getEmbedding } from "@/lib/ai/embeddings";
 import type { Match } from "@/lib/schemas/ai.schema";
-import type { User } from "@/lib/schemas/user.schema";
-import { checkEligibility } from "./eligibility.service";
-import type { Transcript } from "@/lib/schemas/transcript.schema";
-import { Scholarship } from "../scholarships/constants";
 
 export interface MatchScore {
   scholarshipId: string;

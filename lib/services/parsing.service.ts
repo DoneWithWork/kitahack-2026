@@ -23,7 +23,7 @@ Return JSON with these fields:
 - provider: string (required)
 - citizenship: string array (optional)
 - incomeCap: number (optional, 1=low, 2=medium, 3=high)
-- minGrades: object mapping subject names to minimum grade numbers (optional)
+- minGrades: object mapping grade letters to minimum GPA numbers (optional). Use keys "A*", "A", "B" etc. Example: {"A*": 90, "A": 80, "B": 70} means require 90+ GPA for A*, 80+ for A, 70+ for B.
 - fieldsAllowed: string array (optional)
 - deadline: ISO 8601 datetime string (required)
 - benefits: string (required)

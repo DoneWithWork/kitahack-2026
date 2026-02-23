@@ -15,7 +15,6 @@ import {
   Clock,
   FileText,
   GraduationCap,
-  Sparkles,
   Target,
 } from "lucide-react";
 import Link from "next/link";
@@ -209,31 +208,133 @@ export default function DashboardPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-8 mt-6">
-          {/* Banner
-          <Card className="bg-linear-to-r from-yellow-300 to-yellow-200 dark:from-yellow-700 dark:to-yellow-600 border-0 overflow-hidden">
-            <CardContent className="p-6 lg:p-8">
-              <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
-                    Explore new opportunities
-                  </h2>
-                  <p className="text-muted-foreground mb-4 max-w-lg">
-                    Course search made smarter and simpler. Use our magical AI
-                    system to find scholarships with high admission chances.
-                  </p>
-                  <Button className="bg-background text-foreground hover:bg-background/90 font-semibold">
-                    Try now
-                  </Button>
-                </div>
-                <div className="w-24 h-24 lg:w-32 lg:h-32 bg-background/30 rounded-full flex items-center justify-center">
-                  <Sparkles className="w-12 h-12 lg:w-16 lg:h-16 text-yellow-700 dark:text-yellow-200" />
-                </div>
+          {/* Current Applications Section */}
+          {applications && applications.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-foreground">
+                  Your Applications
+                </h2>
+                <Button
+                  variant="ghost"
+                  className="text-primary hover:text-primary/80"
+                  onClick={() => setActiveTab("applications")}
+                >
+                  See all <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
               </div>
-            </CardContent>
-          </Card> */}
-          {/* Main Content Grid */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {applications.slice(0, 3).map((app) => (
+                  <Card
+                    key={app.scholarshipId}
+                    className="border-border bg-card hover:border-primary/30 transition-colors"
+                  >
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-semibold text-foreground line-clamp-2 flex-1">
+                          {app.scholarshipId}
+                        </h3>
+                        <Badge
+                          className={`ml-2 ${
+                            app.status === "applied" || app.status === "accepted"
+                              ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                              : "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
+                          }`}
+                        >
+                          {app.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Deadline: {new Date(app.deadline).toLocaleDateString()}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full"
+                            style={{
+                              width: `${
+                                (app.checklist.filter((i) => i.completed).length /
+                                  app.checklist.length) *
+                                100
+                              }%`,
+                            }}
+                          />
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {app.checklist.filter((i) => i.completed).length}/
+                          {app.checklist.length}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Matched Scholarships Section */}
+          {matches && matches.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-foreground">
+                  Matched Scholarships
+                </h2>
+                <Button
+                  variant="ghost"
+                  className="text-primary hover:text-primary/80"
+                  onClick={() => setActiveTab("matches")}
+                >
+                  See all <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {matches.slice(0, 3).map((match) => (
+                  <Card
+                    key={match.scholarshipId}
+                    className="border-border bg-card hover:border-primary/30 transition-colors"
+                  >
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-semibold text-foreground line-clamp-2 flex-1">
+                          {match.scholarshipId}
+                        </h3>
+                        <Badge
+                          className={`ml-2 ${
+                            match.eligible
+                              ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                              : "bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300"
+                          }`}
+                        >
+                          {match.eligible ? "Eligible" : "Review"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                        <span>Score: {match.score}</span>
+                        <span>Match: {Math.round(match.similarity * 100)}%</span>
+                      </div>
+                      {!match.eligible && match.reasons.length > 0 && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mb-3">
+                          {match.reasons[0]}
+                        </p>
+                      )}
+                      <Link href={`/scholarships/${match.scholarshipId}`}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-primary border-primary/20 hover:bg-primary/10"
+                        >
+                          View Details
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recent Activity */}
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* Recent Activity */}
             <Card className="lg:col-span-2 border-border bg-card">
               <CardHeader>
                 <CardTitle className="text-lg font-bold text-foreground">

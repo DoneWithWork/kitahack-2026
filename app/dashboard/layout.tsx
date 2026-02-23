@@ -10,7 +10,6 @@ import {
   Briefcase,
   FileText,
   GraduationCap,
-  Heart,
   LayoutDashboard,
   Loader2,
   LogOut,
@@ -24,8 +23,7 @@ import { useState } from "react";
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: StarsIcon, label: "Scholarships", href: "/dashboard/scholarships" },
-  { icon: Heart, label: "Shortlist", href: "/dashboard/shortlist" },
-  { icon: Briefcase, label: "Applications", href: "/dashboard/applications" },
+  { icon: Briefcase, label: "Applications", href: "/dashboard/application" },
   { icon: FileText, label: "Documents", href: "/dashboard/documents" },
   { icon: User, label: "Profile", href: "/dashboard/profile" },
 ];
@@ -117,7 +115,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, signOut, loading } = useAuth();
+  const { loading } = useAuth();
 
   if (loading) {
     return (

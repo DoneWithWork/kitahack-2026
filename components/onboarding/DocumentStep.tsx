@@ -19,8 +19,6 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 export function DocumentsStep({
   onNext,
-  onBack,
-  canGoBack,
 }: {
   onNext: () => void;
   onBack: () => void;
@@ -32,7 +30,6 @@ export function DocumentsStep({
   const documentsQuery = trpc.document.getByType.useQuery({
     type: "certificate",
   });
-  const uploadMutation = trpc.document.uploadWithOCR.useMutation();
   const saveStatus = trpc.onboarding.saveDocumentsStatus.useMutation();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,7 +62,7 @@ export function DocumentsStep({
         throw new Error("Upload failed");
       }
 
-      const result = await response.json();
+      await response.json();
     } catch (error) {
       console.error("Upload error:", error);
       alert("Failed to upload documents. Please try again.");

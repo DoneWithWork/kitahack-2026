@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,7 +15,6 @@ import Link from "next/link";
 import { useState } from "react";
 
 export default function ProfilePage() {
-  const { user } = useAuth();
   const profileQuery = trpc.profile.get.useQuery();
   const updateMutation = trpc.profile.update.useMutation();
 

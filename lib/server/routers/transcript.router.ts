@@ -13,7 +13,7 @@ export const transcriptRouter = router({
 
   uploadFromImage: protectedProcedure
     .input(z.object({ imageUrl: z.url() }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       console.log("Received image URL:", input.imageUrl);
       return { success: true };
     }),

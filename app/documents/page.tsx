@@ -9,30 +9,61 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  FileText, 
-  Upload, 
-  GraduationCap, 
-  Award, 
-  Trash2, 
-  ExternalLink, 
+import {
+  FileText,
+  Upload,
+  GraduationCap,
+  Award,
+  Trash2,
+  ExternalLink,
   CheckCircle2,
   Loader2,
   Eye,
   FileIcon,
-  FileType
+  FileType,
 } from "lucide-react";
 import Link from "next/link";
-import type { Document, DocumentUploadInput } from "@/lib/schemas/document.schema";
+import type {
+  Document,
+  DocumentUploadInput,
+} from "@/lib/schemas/document.schema";
 
 const documentTypes = [
-  { value: "transcript", label: "Academic Transcript", icon: GraduationCap, color: "blue" },
+  {
+    value: "transcript",
+    label: "Academic Transcript",
+    icon: GraduationCap,
+    color: "blue",
+  },
   { value: "certificate", label: "Certificate", icon: Award, color: "green" },
-  { value: "recommendation_letter", label: "Recommendation Letter", icon: FileText, color: "purple" },
-  { value: "essay", label: "Essay/Personal Statement", icon: FileType, color: "amber" },
+  {
+    value: "recommendation_letter",
+    label: "Recommendation Letter",
+    icon: FileText,
+    color: "purple",
+  },
+  {
+    value: "essay",
+    label: "Essay/Personal Statement",
+    icon: FileType,
+    color: "amber",
+  },
   { value: "other", label: "Other Document", icon: FileIcon, color: "slate" },
 ];
 
@@ -43,11 +74,16 @@ export default function DocumentsPage() {
   const [documentName, setDocumentName] = useState("");
   const [documentDescription, setDocumentDescription] = useState("");
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [, setSelectedDocument] = useState<Document | null>(null);
 
-  const { data: allDocuments, refetch: refetchDocuments } = trpc.document.getAll.useQuery();
-  const { data: certificates } = trpc.document.getByType.useQuery({ type: "certificate" });
-  const { data: transcripts } = trpc.document.getByType.useQuery({ type: "transcript" });
+  const { data: allDocuments, refetch: refetchDocuments } =
+    trpc.document.getAll.useQuery();
+  const { data: certificates } = trpc.document.getByType.useQuery({
+    type: "certificates",
+  });
+  const { data: transcripts } = trpc.document.getByType.useQuery({
+    type: "transcripts",
+  });
   const uploadMutation = trpc.document.uploadWithOCR.useMutation();
   const deleteMutation = trpc.document.delete.useMutation();
 
@@ -122,14 +158,22 @@ export default function DocumentsPage() {
       <Card key={doc.id} className="group">
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
-            <div className={`w-12 h-12 rounded-xl bg-${typeInfo.color}-100 dark:bg-${typeInfo.color}-900 flex items-center justify-center shrink-0`}>
-              <Icon className={`h-6 w-6 text-${typeInfo.color}-600 dark:text-${typeInfo.color}-400`} />
+            <div
+              className={`w-12 h-12 rounded-xl bg-${typeInfo.color}-100 dark:bg-${typeInfo.color}-900 flex items-center justify-center shrink-0`}
+            >
+              <Icon
+                className={`h-6 w-6 text-${typeInfo.color}-600 dark:text-${typeInfo.color}-400`}
+              />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h3 className="font-semibold text-foreground truncate">{doc.name}</h3>
-                  <p className="text-sm text-muted-foreground">{typeInfo.label}</p>
+                  <h3 className="font-semibold text-foreground truncate">
+                    {doc.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {typeInfo.label}
+                  </p>
                 </div>
                 {doc.isVerified && (
                   <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 shrink-0">
@@ -140,25 +184,56 @@ export default function DocumentsPage() {
               </div>
 
               {doc.description && (
-                <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{doc.description}</p>
+                <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                  {doc.description}
+                </p>
               )}
 
-              {doc.extractedData && Object.keys(doc.extractedData).length > 0 && (
-                <div className="mt-3 p-3 rounded-lg bg-muted text-sm">
-                  {typeof (doc.extractedData as Record<string, unknown>).certificateName === "string" && (
-                    <p><span className="font-medium">Certificate:</span> {String((doc.extractedData as Record<string, unknown>).certificateName)}</p>
-                  )}
-                  {typeof (doc.extractedData as Record<string, unknown>).issuer === "string" && (
-                    <p><span className="font-medium">Issuer:</span> {String((doc.extractedData as Record<string, unknown>).issuer)}</p>
-                  )}
-                  {typeof (doc.extractedData as Record<string, unknown>).issueDate === "string" && (
-                    <p><span className="font-medium">Date:</span> {new Date(String((doc.extractedData as Record<string, unknown>).issueDate)).toLocaleDateString()}</p>
-                  )}
-                  {typeof (doc.extractedData as Record<string, unknown>).grade === "string" && (
-                    <p><span className="font-medium">Grade:</span> {String((doc.extractedData as Record<string, unknown>).grade)}</p>
-                  )}
-                </div>
-              )}
+              {doc.extractedData &&
+                Object.keys(doc.extractedData).length > 0 && (
+                  <div className="mt-3 p-3 rounded-lg bg-muted text-sm">
+                    {typeof (doc.extractedData as Record<string, unknown>)
+                      .certificateName === "string" && (
+                      <p>
+                        <span className="font-medium">Certificate:</span>{" "}
+                        {String(
+                          (doc.extractedData as Record<string, unknown>)
+                            .certificateName,
+                        )}
+                      </p>
+                    )}
+                    {typeof (doc.extractedData as Record<string, unknown>)
+                      .issuer === "string" && (
+                      <p>
+                        <span className="font-medium">Issuer:</span>{" "}
+                        {String(
+                          (doc.extractedData as Record<string, unknown>).issuer,
+                        )}
+                      </p>
+                    )}
+                    {typeof (doc.extractedData as Record<string, unknown>)
+                      .issueDate === "string" && (
+                      <p>
+                        <span className="font-medium">Date:</span>{" "}
+                        {new Date(
+                          String(
+                            (doc.extractedData as Record<string, unknown>)
+                              .issueDate,
+                          ),
+                        ).toLocaleDateString()}
+                      </p>
+                    )}
+                    {typeof (doc.extractedData as Record<string, unknown>)
+                      .grade === "string" && (
+                      <p>
+                        <span className="font-medium">Grade:</span>{" "}
+                        {String(
+                          (doc.extractedData as Record<string, unknown>).grade,
+                        )}
+                      </p>
+                    )}
+                  </div>
+                )}
 
               <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
                 <span>{formatFileSize(doc.fileSize)}</span>
@@ -169,7 +244,11 @@ export default function DocumentsPage() {
               <div className="flex gap-2 mt-4">
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" onClick={() => setSelectedDocument(doc)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedDocument(doc)}
+                    >
                       <Eye className="h-4 w-4 mr-1" />
                       View
                     </Button>
@@ -178,7 +257,8 @@ export default function DocumentsPage() {
                     <DialogHeader>
                       <DialogTitle>{doc.name}</DialogTitle>
                       <DialogDescription>
-                        Uploaded on {new Date(doc.uploadedAt).toLocaleDateString()}
+                        Uploaded on{" "}
+                        {new Date(doc.uploadedAt).toLocaleDateString()}
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -199,29 +279,49 @@ export default function DocumentsPage() {
 
                       {doc.ocrText && (
                         <div>
-                          <h4 className="font-semibold mb-2">Extracted Text (OCR)</h4>
+                          <h4 className="font-semibold mb-2">
+                            Extracted Text (OCR)
+                          </h4>
                           <div className="p-4 bg-muted rounded-lg max-h-60 overflow-y-auto">
-                            <pre className="text-sm whitespace-pre-wrap">{doc.ocrText}</pre>
+                            <pre className="text-sm whitespace-pre-wrap">
+                              {doc.ocrText}
+                            </pre>
                           </div>
                         </div>
                       )}
 
-                      {doc.extractedData && Object.keys(doc.extractedData).length > 0 && (
-                        <div>
-                          <h4 className="font-semibold mb-2">Extracted Data</h4>
-                          <div className="grid gap-2">
-                            {Object.entries(doc.extractedData).map(([key, value]) => (
-                              <div key={key} className="flex justify-between p-2 bg-muted rounded">
-                                <span className="font-medium capitalize">{key.replace(/([A-Z])/g, " $1").trim()}:</span>
-                                <span className="text-muted-foreground">{String(value)}</span>
-                              </div>
-                            ))}
+                      {doc.extractedData &&
+                        Object.keys(doc.extractedData).length > 0 && (
+                          <div>
+                            <h4 className="font-semibold mb-2">
+                              Extracted Data
+                            </h4>
+                            <div className="grid gap-2">
+                              {Object.entries(doc.extractedData).map(
+                                ([key, value]) => (
+                                  <div
+                                    key={key}
+                                    className="flex justify-between p-2 bg-muted rounded"
+                                  >
+                                    <span className="font-medium capitalize">
+                                      {key.replace(/([A-Z])/g, " $1").trim()}:
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                      {String(value)}
+                                    </span>
+                                  </div>
+                                ),
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
                       <Button asChild className="w-full">
-                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
+                        <a
+                          href={doc.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           <ExternalLink className="h-4 w-4 mr-2" />
                           Open Document
                         </a>
@@ -231,7 +331,11 @@ export default function DocumentsPage() {
                 </Dialog>
 
                 <Button variant="outline" size="sm" asChild>
-                  <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={doc.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <ExternalLink className="h-4 w-4 mr-1" />
                     Open
                   </a>
@@ -273,7 +377,9 @@ export default function DocumentsPage() {
               <Button variant="ghost">Scholarships</Button>
             </Link>
             <Link href="/documents">
-              <Button variant="ghost" className="text-primary">Documents</Button>
+              <Button variant="ghost" className="text-primary">
+                Documents
+              </Button>
             </Link>
             <Link href="/assistant">
               <Button variant="ghost">AI Assistant</Button>
@@ -288,7 +394,8 @@ export default function DocumentsPage() {
           <div>
             <h1 className="text-4xl font-bold text-foreground">My Documents</h1>
             <p className="text-muted-foreground mt-1">
-              Manage your transcripts, certificates, and other important documents
+              Manage your transcripts, certificates, and other important
+              documents
             </p>
           </div>
           <Dialog>
@@ -302,7 +409,8 @@ export default function DocumentsPage() {
               <DialogHeader>
                 <DialogTitle>Upload New Document</DialogTitle>
                 <DialogDescription>
-                  Upload your documents for AI-powered OCR extraction and organization
+                  Upload your documents for AI-powered OCR extraction and
+                  organization
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-6 py-4">
@@ -310,23 +418,35 @@ export default function DocumentsPage() {
                   {selectedFile ? (
                     <div className="space-y-2">
                       <FileText className="h-12 w-12 text-blue-600 mx-auto" />
-                      <p className="font-medium text-foreground">{selectedFile.name}</p>
-                      <p className="text-sm text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedFile(null)}>
+                      <p className="font-medium text-foreground">
+                        {selectedFile.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatFileSize(selectedFile.size)}
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedFile(null)}
+                      >
                         Change File
                       </Button>
                     </div>
                   ) : (
                     <>
                       <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                      <p className="text-lg font-medium text-foreground mb-2">Drop your file here</p>
+                      <p className="text-lg font-medium text-foreground mb-2">
+                        Drop your file here
+                      </p>
                       <p className="text-sm text-muted-foreground mb-4">
                         Supports PDF, PNG, JPG (max 10MB)
                       </p>
                       <Input
                         type="file"
                         accept=".pdf,.png,.jpg,.jpeg"
-                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                        onChange={(e) =>
+                          setSelectedFile(e.target.files?.[0] || null)
+                        }
                         className="max-w-sm mx-auto"
                       />
                     </>
@@ -336,7 +456,10 @@ export default function DocumentsPage() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="doc-type">Document Type *</Label>
-                    <Select value={documentType} onValueChange={setDocumentType}>
+                    <Select
+                      value={documentType}
+                      onValueChange={setDocumentType}
+                    >
                       <SelectTrigger className="mt-2">
                         <SelectValue placeholder="Select document type" />
                       </SelectTrigger>
@@ -365,7 +488,9 @@ export default function DocumentsPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="doc-description">Description (Optional)</Label>
+                    <Label htmlFor="doc-description">
+                      Description (Optional)
+                    </Label>
                     <Textarea
                       id="doc-description"
                       placeholder="Add any notes about this document..."
@@ -407,8 +532,12 @@ export default function DocumentsPage() {
                   <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{allDocuments?.length || 0}</p>
-                  <p className="text-sm text-muted-foreground">Total Documents</p>
+                  <p className="text-2xl font-bold">
+                    {allDocuments?.length || 0}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Total Documents
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -420,7 +549,9 @@ export default function DocumentsPage() {
                   <Award className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{certificates?.length || 0}</p>
+                  <p className="text-2xl font-bold">
+                    {certificates?.length || 0}
+                  </p>
                   <p className="text-sm text-muted-foreground">Certificates</p>
                 </div>
               </div>
@@ -433,7 +564,9 @@ export default function DocumentsPage() {
                   <GraduationCap className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{transcripts?.length || 0}</p>
+                  <p className="text-2xl font-bold">
+                    {transcripts?.length || 0}
+                  </p>
                   <p className="text-sm text-muted-foreground">Transcripts</p>
                 </div>
               </div>
@@ -472,7 +605,9 @@ export default function DocumentsPage() {
                   <Upload className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">No documents yet</h3>
-                <p className="text-muted-foreground mb-4">Upload your first document to get started</p>
+                <p className="text-muted-foreground mb-4">
+                  Upload your first document to get started
+                </p>
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button>
@@ -480,7 +615,9 @@ export default function DocumentsPage() {
                       Upload Document
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>{/* Same upload dialog content */}</DialogContent>
+                  <DialogContent>
+                    {/* Same upload dialog content */}
+                  </DialogContent>
                 </Dialog>
               </Card>
             ) : (
@@ -504,7 +641,7 @@ export default function DocumentsPage() {
 
           <TabsContent value="other" className="space-y-4">
             <div className="grid md:grid-cols-2 gap-6">
-                  {getDocumentsByType("other")?.map(renderDocumentCard)}
+              {getDocumentsByType("other")?.map(renderDocumentCard)}
             </div>
           </TabsContent>
         </Tabs>

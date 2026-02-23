@@ -4,6 +4,8 @@ export const userSchema = z.object({
   uid: z.string(),
   email: z.string().email(),
   name: z.string().min(1),
+  role: z.enum(["user", "admin_simulated"]).default("user"),
+  hackathonMode: z.boolean().default(false),
   incomeBracket: z.enum(["low", "medium", "high"]).optional(),
   interests: z.array(z.string()).default([]),
   goals: z.string().optional(),
@@ -22,6 +24,8 @@ export const userSchema = z.object({
 
 export const userProfileUpdateSchema = z.object({
   name: z.string().min(1).optional(),
+  role: z.enum(["user", "admin_simulated"]).optional(),
+  hackathonMode: z.boolean().optional(),
   incomeBracket: z.enum(["low", "medium", "high"]).optional(),
   interests: z.array(z.string()).optional(),
   goals: z.string().optional(),

@@ -56,6 +56,8 @@ export async function createContext({ req }: CreateContextOpts) {
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
 
+export type ProtectedContext = Context & { user: NonNullable<Context["user"]> };
+
 const t = initTRPC.context<Context>().create();
 
 export const router = t.router;
@@ -67,5 +69,5 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   if (!ctx.user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-  return next({ ctx });
+  return next({ ctx: ctx as ProtectedContext });
 });

@@ -11,10 +11,6 @@ import {
   documentSchema,
   documentUploadInputSchema,
 } from "@/lib/schemas/document.schema";
-import {
-  classifyDocument,
-  parseCertificateText,
-} from "@/lib/services/document.service";
 import { protectedProcedure, router } from "@/lib/trpc/server";
 import { now } from "@/lib/utils/dates";
 import { randomUUID } from "crypto";
@@ -29,8 +25,8 @@ export const documentRouter = router({
     .input(
       z.object({
         type: z.enum([
-          "transcript",
-          "certificate",
+          "transcripts",
+          "certificates",
           "recommendation_letter",
           "essay",
           "other",
@@ -68,7 +64,7 @@ export const documentRouter = router({
 
   uploadWithOCR: protectedProcedure
     .input(documentUploadInputSchema)
-    .mutation(async ({ ctx, input }) => {}),
+    .mutation(async () => {}),
 
   update: protectedProcedure
     .input(

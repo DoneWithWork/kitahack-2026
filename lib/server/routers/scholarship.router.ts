@@ -21,11 +21,11 @@ export const scholarshipRouter = router({
 
   search: protectedProcedure
     .input(scholarshipSearchFiltersSchema)
-    .query(async ({ input }) => {}),
+    .query(async () => {}),
 
   getByField: protectedProcedure
     .input(z.object({ field: z.string() }))
-    .query(async ({ input }) => {}),
+    .query(async () => {}),
 
   getUrgent: protectedProcedure.query(async () => {
     const twoWeeksFromNow = new Date();
@@ -77,13 +77,13 @@ export const scholarshipRouter = router({
         data: scholarshipInputSchema.partial(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async () => {
       return { success: true };
     }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async () => {
       return { success: true };
     }),
 });

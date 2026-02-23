@@ -1,11 +1,7 @@
 import { router, protectedProcedure } from "@/lib/trpc/server";
 import { getUser } from "@/lib/repositories/users.repo";
-import { getTranscript } from "@/lib/repositories/transcripts.repo";
 import { getAllScholarships } from "@/lib/repositories/scholarships.repo";
-import { createMatch, getMatches } from "@/lib/repositories/applications.repo";
-import { matchSchema } from "@/lib/schemas/ai.schema";
-import { now } from "@/lib/utils/dates";
-import { logger } from "@/lib/utils/logger";
+import { getMatches } from "@/lib/repositories/applications.repo";
 
 export const matchRouter = router({
   getMatches: protectedProcedure.query(async ({ ctx }) => {
@@ -14,8 +10,7 @@ export const matchRouter = router({
 
   calculateMatches: protectedProcedure.mutation(async ({ ctx }) => {
     const user = await getUser(ctx.user!.uid);
-    const transcript = await getTranscript(ctx.user!.uid);
-    const scholarships = await getAllScholarships();
+    await getAllScholarships();
 
     if (!user) {
       throw new Error("User not found");
