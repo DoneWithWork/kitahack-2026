@@ -80,9 +80,10 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-lg lg:text-xl text-muted-foreground max-w-xl leading-relaxed">
-                Over $100 Million in scholarships go unclaimed every year.
-                Let&apos;s make sure you claim your share — and more! Our
-                AI-powered platform matches you with the perfect opportunities.
+                In Malaysia, RM32 billion in PTPTN loans remain unpaid, while
+                thousands of scholarships go unclaimed annually. Our AI-powered
+                platform helps Malaysian students find and secure their rightful
+                funding opportunities.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -185,9 +186,9 @@ export default function LandingPage() {
                       <Award className="w-6 h-6" />
                     </div>
                     <div>
-                      <p className="font-bold text-foreground">$50,000</p>
+                      <p className="font-bold text-foreground">RM100,000</p>
                       <p className="text-xs text-muted-foreground">
-                        Average Award
+                        Full Scholarship Average
                       </p>
                     </div>
                   </div>
@@ -198,16 +199,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 bg-muted">
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { value: "$2.5M+", label: "Scholarships Found" },
-              { value: "15,000+", label: "Active Students" },
-              { value: "98%", label: "Match Accuracy" },
-              { value: "500+", label: "Partner Universities" },
-            ].map((stat, i) => (
+        {/* Stats Section */}
+        <section className="py-16 bg-muted">
+          <div className="container mx-auto px-4 lg:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {[
+                { value: "RM71B+", label: "PTPTN Disbursed" },
+                { value: "3.9M+", label: "Students Funded" },
+                { value: "7,000+", label: "B40 Get Free Education" },
+                { value: "20+", label: "Public Universities" },
+              ].map((stat, i) => (
               <div key={i} className="text-center">
                 <p className="text-3xl lg:text-4xl font-bold text-primary">
                   {stat.value}
@@ -274,13 +275,13 @@ export default function LandingPage() {
                   "Get AI-powered help writing compelling scholarship essays that stand out from the competition.",
                 color: "fuchsia",
               },
-              {
-                icon: CheckCircle2,
-                title: "Deadline Reminders",
-                description:
-                  "Never miss a deadline with smart reminders and priority-based notifications.",
-                color: "pink",
-              },
+                {
+                  icon: CheckCircle2,
+                  title: "PTPTN & Government Aid",
+                  description:
+                    "Navigate Malaysia's scholarship landscape including PTPTN loans, B40 assistance, and merit-based awards.",
+                  color: "pink",
+                },
             ].map((feature, i) => (
               <Card key={i} className="group hover-lift border-border bg-card">
                 <CardContent className="p-6">

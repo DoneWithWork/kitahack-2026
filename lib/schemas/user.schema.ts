@@ -10,6 +10,8 @@ export const userSchema = z.object({
   interests: z.array(z.string()).default([]),
   goals: z.string().optional(),
   citizenship: z.string().optional(),
+  educationLevel: z.string().optional(),
+  fieldOfStudy: z.string().optional(),
   currentSchool: z.string().optional(),
   graduationYear: z.number().min(2024).max(2035).optional(),
   targetField: z.string().optional(),
@@ -29,6 +31,9 @@ export const userProfileUpdateSchema = z.object({
   incomeBracket: z.enum(["low", "medium", "high"]).optional(),
   interests: z.array(z.string()).optional(),
   goals: z.string().optional(),
+  citizenship: z.string().optional(),
+  educationLevel: z.string().optional(),
+  fieldOfStudy: z.string().optional(),
   currentSchool: z.string().optional(),
   graduationYear: z.number().min(2024).max(2035).optional(),
   targetField: z.string().optional(),
@@ -46,6 +51,9 @@ export const onboardingProfileSchema = z.object({
   incomeBracket: z.enum(["low", "medium", "high"]),
   interests: z.array(z.string()).min(1),
   goals: z.string().min(10),
+  citizenship: z.string().min(1).optional(),
+  educationLevel: z.string().min(1).optional(),
+  fieldOfStudy: z.string().min(1).optional(),
 });
 
 export type User = z.infer<typeof userSchema>;

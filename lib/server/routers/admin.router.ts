@@ -130,6 +130,26 @@ export const adminRouter = router({
         });
       }
 
+      const hasUserSubmitted = (stage: string, data: typeof application.stages) => {
+        switch (stage) {
+          case "essay":
+            return data.essay.submitted === true;
+          case "group":
+            return data.group.checked === true;
+          case "interview":
+            return data.interview.checked === true;
+          default:
+            return false;
+        }
+      };
+
+      if (!hasUserSubmitted(currentStage, application.stages)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Cannot review ${currentStage} stage - user has not completed this stage yet`,
+        });
+      }
+
       const now = new Date().toISOString();
       const nextStageIndex = STAGE_ORDER.indexOf(currentStage) + 1;
       const nextStage = STAGE_ORDER[nextStageIndex] as typeof currentStage | undefined;

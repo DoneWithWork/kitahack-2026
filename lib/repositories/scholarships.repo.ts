@@ -39,7 +39,13 @@ export const getAllScholarships = async (): Promise<Scholarship[]> => {
       .orderBy("deadline", "asc")
       .get();
     console.log(`Fetched ${snapshot.size} scholarships from Firestore`);
-    return snapshot.docs.map((doc) => doc.data() as Scholarship);
+    return snapshot.docs.map((doc) => {
+      const data = doc.data() as Scholarship & { uid?: string };
+      return {
+        ...data,
+        uid: data.uid ?? doc.id,
+      } as Scholarship;
+    });
   } catch (error) {
     logger.error({ error }, "Error getting all scholarships");
     throw error;

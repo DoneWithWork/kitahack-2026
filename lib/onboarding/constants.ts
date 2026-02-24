@@ -48,4 +48,17 @@ const commonInterests = [
   "Clubs & Societies",
 ];
 
-export { steps, targetFields, incomeBrackets, commonInterests };
+const educationLevels = [
+  { value: "high_school", label: "High School (SPM/STPM)" },
+  { value: "pre_university", label: "Pre-University (A-Level, Matriculation, Foundation)" },
+  { value: "undergraduate", label: "Undergraduate (Bachelor's Degree)" },
+  { value: "postgraduate", label: "Postgraduate (Master's/PhD)" },
+];
+
+const citizenships = [
+  { value: "Malaysian", label: "Malaysian" },
+  { value: "Malaysian_PR", label: "Malaysian Permanent Resident" },
+  { value: "Non-Malaysian", label: "Non-Malaysian" },
+];
+
+export { steps, targetFields, incomeBrackets, commonInterests, educationLevels, citizenships };

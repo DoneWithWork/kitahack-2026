@@ -36,6 +36,8 @@ import {
   targetFields,
   incomeBrackets,
   commonInterests,
+  educationLevels,
+  citizenships,
 } from "@/lib/onboarding/constants";
 import { trpc } from "@/lib/trpc/client";
 import type { User } from "@/lib/schemas/user.schema";
@@ -310,6 +312,9 @@ export default function ProfilePage() {
     interests: profile?.interests || [] as string[],
     goals: profile?.goals || "",
     gpa: profile?.gpa || 0,
+    citizenship: profile?.citizenship || "",
+    educationLevel: profile?.educationLevel || "",
+    fieldOfStudy: profile?.fieldOfStudy || "",
   }), [profile]);
 
   const [editForm, setEditForm] = useState(editFormDefaults);
@@ -324,7 +329,10 @@ export default function ProfilePage() {
     const fields = [
       profile.name,
       profile.email,
+      profile.citizenship,
+      profile.educationLevel,
       profile.currentSchool,
+      profile.fieldOfStudy,
       profile.graduationYear,
       profile.targetField,
       profile.incomeBracket,
@@ -399,6 +407,9 @@ export default function ProfilePage() {
       interests: editForm.interests,
       goals: editForm.goals || undefined,
       gpa: editForm.gpa || undefined,
+      citizenship: editForm.citizenship || undefined,
+      educationLevel: editForm.educationLevel || undefined,
+      fieldOfStudy: editForm.fieldOfStudy || undefined,
     });
   };
 
@@ -581,6 +592,48 @@ export default function ProfilePage() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="grid gap-2">
+                      <Label>Citizenship</Label>
+                      <Select
+                        value={editForm.citizenship}
+                        onValueChange={(v) =>
+                          setEditForm({ ...editForm, citizenship: v })
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select citizenship" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {citizenships.map((citizenship) => (
+                            <SelectItem key={citizenship.value} value={citizenship.value}>
+                              {citizenship.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Education Level</Label>
+                      <Select
+                        value={editForm.educationLevel}
+                        onValueChange={(v) =>
+                          setEditForm({ ...editForm, educationLevel: v })
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select education level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {educationLevels.map((level) => (
+                            <SelectItem key={level.value} value={level.value}>
+                              {level.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid gap-2">
                       <Label htmlFor="edit-school">Current School</Label>
                       <Input
                         id="edit-school"
@@ -621,26 +674,37 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label>Target Field</Label>
-                      <Select
-                        value={editForm.targetField}
-                        onValueChange={(v) =>
-                          setEditForm({ ...editForm, targetField: v })
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select field" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {targetFields.map((field) => (
-                            <SelectItem key={field.value} value={field.value}>
-                              {field.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div className="grid gap-2">
+                    <Label>Target Field</Label>
+                    <Select
+                      value={editForm.targetField}
+                      onValueChange={(v) =>
+                        setEditForm({ ...editForm, targetField: v })
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select field" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {targetFields.map((field) => (
+                          <SelectItem key={field.value} value={field.value}>
+                            {field.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-fieldOfStudy">Specific Field of Study</Label>
+                    <Input
+                      id="edit-fieldOfStudy"
+                      value={editForm.fieldOfStudy}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, fieldOfStudy: e.target.value })
+                      }
+                      placeholder="e.g., Computer Science, Medicine, Law"
+                    />
+                  </div>
                     <div className="grid gap-2">
                       <Label>Income Bracket</Label>
                       <Select
@@ -895,9 +959,30 @@ export default function ProfilePage() {
                     icon={Mail}
                   />
                   <ProfileField
+                    label="Citizenship"
+                    value={profile.citizenship}
+                    icon={Shield}
+                    editable
+                    onEdit={() => openEditDialog()}
+                  />
+                  <ProfileField
+                    label="Education Level"
+                    value={profile.educationLevel}
+                    icon={GraduationCap}
+                    editable
+                    onEdit={() => openEditDialog()}
+                  />
+                  <ProfileField
                     label="Current School"
                     value={profile.currentSchool}
                     icon={School}
+                    editable
+                    onEdit={() => openEditDialog()}
+                  />
+                  <ProfileField
+                    label="Field of Study"
+                    value={profile.fieldOfStudy}
+                    icon={BookOpen}
                     editable
                     onEdit={() => openEditDialog()}
                   />
@@ -908,14 +993,14 @@ export default function ProfilePage() {
                         ? String(profile.graduationYear)
                         : undefined
                     }
-                    icon={GraduationCap}
+                    icon={Calendar}
                     editable
                     onEdit={() => openEditDialog()}
                   />
                   <ProfileField
                     label="Target Field"
                     value={targetFieldLabel}
-                    icon={BookOpen}
+                    icon={Target}
                     editable
                     onEdit={() => openEditDialog()}
                   />

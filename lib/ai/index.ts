@@ -14,6 +14,12 @@ type CallGeminiProps<T> = {
   schema: z.ZodType<T>;
 };
 
+type GenerateTextProps = {
+  prompt: string;
+  systemInstruction?: string;
+  model?: "gemini-2.5-flash-lite" | "gemini-3-flash-preview";
+};
+
 export async function CallGemini<T>({
   prompt,
   model = "gemini-2.5-flash-lite",
@@ -61,6 +67,30 @@ export async function CallGeminiWithTool<T>({
     throw new Error("No text response from Gemini");
   }
   return schema.parse(JSON.parse(text));
+}
+
+export async function generateText({
+  prompt,
+  systemInstruction,
+  model = "gemini-2.5-flash-lite",
+}: GenerateTextProps): Promise<string> {
+  const contents = systemInstruction
+    ? `${systemInstruction}\n\n${prompt}`
+    : prompt;
+  const response = await ai.models.generateContent({
+    model,
+    contents,
+  });
+
+  if (!response.text) {
+    throw new Error("Empty model response");
+  }
+
+  const totalTokens = response.usageMetadata?.totalTokenCount;
+  if (totalTokens) {
+    console.log(`Total tokens: ${totalTokens}`);
+  }
+  return response.text;
 }
 type ExtractTextProps<T> = {
   model?: "gemini-2.5-flash-lite" | "gemini-3-flash-preview";

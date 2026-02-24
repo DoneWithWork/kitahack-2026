@@ -16,8 +16,8 @@ export default function InterviewPage() {
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [aiResult, setAiResult] = useState("");
 
-  const { data, isLoading, error } = trpc.application.getInterviewStage.useQuery(
-    { applicationId, scholarshipId: "" },
+  const { data, isLoading, error } = trpc.application.getInterviewStageById.useQuery(
+    { applicationId },
     { enabled: !!applicationId }
   );
 

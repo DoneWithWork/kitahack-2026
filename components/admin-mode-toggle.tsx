@@ -4,16 +4,15 @@ import { useRouter, useParams } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Shield, User, Loader2 } from "lucide-react";
-import { useState } from "react";
 
 interface AdminModeToggleProps {
   applicationId?: string;
+  highlight?: boolean;
 }
 
-export function AdminModeToggle({ applicationId }: AdminModeToggleProps) {
+export function AdminModeToggle({ applicationId, highlight }: AdminModeToggleProps) {
   const router = useRouter();
   const params = useParams();
-  const [isLoading, setIsLoading] = useState(false);
 
   const appId = applicationId || (params.id as string);
 
@@ -23,27 +22,32 @@ export function AdminModeToggle({ applicationId }: AdminModeToggleProps) {
   );
 
   const toggleMutation = trpc.admin.toggleAdminMode.useMutation({
-    onSuccess: (data) => {
-      refetchRole();
+    onSuccess: async (data) => {
+      await refetchRole();
       if (data.role === "admin_simulated") {
-        router.push(`/dashboard/admin?applicationId=${appId}`);
+        router.replace(`/dashboard/admin?applicationId=${appId}`);
       } else {
-        router.push(`/dashboard/application/${appId}/essay`);
+        router.replace(`/dashboard/application/${appId}/essay`);
       }
-    },
-    onError: () => {
-      setIsLoading(false);
     },
   });
 
   const handleToggle = async () => {
-    if (!appId) return;
-    setIsLoading(true);
+    if (!appId || toggleMutation.isPending) return;
     const enable = roleData?.role !== "admin_simulated";
-    await toggleMutation.mutateAsync({ enable });
+    try {
+      await toggleMutation.mutateAsync({ enable });
+    } catch (error) {
+      console.error("Error toggling admin mode:", error);
+    }
   };
 
   const isAdminMode = roleData?.role === "admin_simulated";
+  const isLoading = toggleMutation.isPending;
+  const highlightClass =
+    highlight && !isAdminMode && !isLoading
+      ? "ring-2 ring-amber-400/80 shadow-sm shadow-amber-500/30 animate-pulse"
+      : "";
 
   if (!roleData) {
     return null;
@@ -55,7 +59,7 @@ export function AdminModeToggle({ applicationId }: AdminModeToggleProps) {
       size="sm"
       onClick={handleToggle}
       disabled={isLoading}
-      className={`gap-2 ${isAdminMode ? "bg-purple-600 hover:bg-purple-700" : ""}`}
+      className={`gap-2 ${highlightClass} ${isAdminMode ? "bg-purple-600 hover:bg-purple-700" : ""}`}
     >
       {isLoading ? (
         <Loader2 className="h-4 w-4 animate-spin" />

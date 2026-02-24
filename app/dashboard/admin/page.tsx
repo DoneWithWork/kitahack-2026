@@ -32,7 +32,7 @@ export default function AdminDashboardPage() {
   const applicationId = searchParams.get("applicationId");
 
   const [notes, setNotes] = useState("");
-  const [isApproving, setIsApproving] = useState(false);
+  const [approvingAction, setApprovingAction] = useState<"approve" | "reject" | null>(null);
 
   const { data: roleData } = trpc.admin.getUserRole.useQuery(undefined, {
     enabled: !!applicationId,
@@ -45,12 +45,12 @@ export default function AdminDashboardPage() {
 
   const approveMutation = trpc.admin.approveStage.useMutation({
     onSuccess: () => {
-      setIsApproving(false);
+      setApprovingAction(null);
       setNotes("");
       refetch();
     },
     onError: () => {
-      setIsApproving(false);
+      setApprovingAction(null);
     },
   });
 
@@ -116,7 +116,7 @@ export default function AdminDashboardPage() {
   const isReviewed = currentStageData.checked;
 
   const handleApprove = async (passed: boolean) => {
-    setIsApproving(true);
+    setApprovingAction(passed ? "approve" : "reject");
     await approveMutation.mutateAsync({
       applicationId,
       passed,
@@ -344,9 +344,9 @@ export default function AdminDashboardPage() {
                       <Button
                         className="w-full bg-green-600 hover:bg-green-700"
                         onClick={() => handleApprove(true)}
-                        disabled={isApproving}
+                        disabled={!!approvingAction}
                       >
-                        {isApproving ? (
+                        {approvingAction === "approve" ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <CheckCircle className="h-4 w-4 mr-2" />
@@ -357,9 +357,9 @@ export default function AdminDashboardPage() {
                         variant="destructive"
                         className="w-full"
                         onClick={() => handleApprove(false)}
-                        disabled={isApproving}
+                        disabled={!!approvingAction}
                       >
-                        {isApproving ? (
+                        {approvingAction === "reject" ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <XCircle className="h-4 w-4 mr-2" />

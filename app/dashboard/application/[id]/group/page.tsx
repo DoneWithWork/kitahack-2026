@@ -17,8 +17,8 @@ export default function GroupPage() {
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [aiResult, setAiResult] = useState("");
 
-  const { data, isLoading, error } = trpc.application.getGroupStage.useQuery(
-    { applicationId, scholarshipId: "" },
+  const { data, isLoading, error } = trpc.application.getGroupStageById.useQuery(
+    { applicationId },
     { enabled: !!applicationId }
   );
 

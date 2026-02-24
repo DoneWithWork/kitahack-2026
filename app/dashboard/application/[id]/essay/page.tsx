@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,22 +20,32 @@ import { AdminModeToggle } from "@/components/admin-mode-toggle";
 
 export default function EssayPage() {
   const params = useParams();
-  const router = useRouter();
   const applicationId = params.id as string;
 
   const [draft, setDraft] = useState("");
   const [localDraft, setLocalDraft] = useState("");
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [showAdminHighlight, setShowAdminHighlight] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const utils = trpc.useUtils();
   const { data: appData, isLoading: appLoading } =
     trpc.application.getApplicationById.useQuery(
       { applicationId },
       { enabled: !!applicationId },
     );
 
-  const saveMutation = trpc.application.saveEssayDraft.useMutation();
-  const submitMutation = trpc.application.submitEssay.useMutation();
+  const saveMutation = trpc.application.saveEssayDraft.useMutation({
+    onSuccess: () => {
+      utils.application.getApplicationById.invalidate();
+    },
+  });
+  const submitMutation = trpc.application.submitEssay.useMutation({
+    onSuccess: () => {
+      utils.application.getApplicationById.invalidate();
+    },
+  });
   const assistanceMutation = trpc.application.getEssayAssistance.useMutation();
 
   useEffect(() => {
@@ -87,16 +97,20 @@ export default function EssayPage() {
   };
 
   const handleSubmit = async () => {
-    if (!localDraft.trim()) return;
+    if (!localDraft.trim() || isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
       await submitMutation.mutateAsync({
         applicationId,
         scholarshipId: application.scholarshipId,
+        draft: localDraft,
       });
-      router.refresh();
+      setShowAdminHighlight(true);
     } catch (err) {
       console.error("Error submitting essay:", err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -121,7 +135,10 @@ export default function EssayPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <AdminModeToggle applicationId={applicationId} />
+        <AdminModeToggle
+          applicationId={applicationId}
+          highlight={showAdminHighlight}
+        />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -205,6 +222,7 @@ export default function EssayPage() {
                     disabled={
                       !isEditable ||
                       !localDraft.trim() ||
+                      isSubmitting ||
                       submitMutation.isPending
                     }
                   >
@@ -228,14 +246,14 @@ export default function EssayPage() {
         </div>
 
         <div className="space-y-6">
-          <Card className="sticky top-6">
-            <CardHeader>
+          <Card className="sticky top-6 max-h-[calc(100vh-6rem)] flex flex-col">
+            <CardHeader className="shrink-0">
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
                 AI Writing Assistant
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 overflow-y-auto min-h-0 pr-1">
               <p className="text-sm text-muted-foreground">
                 Get personalized suggestions to improve your essay based on the
                 scholarship requirements.
