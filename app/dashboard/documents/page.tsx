@@ -3,47 +3,141 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { auth } from "@/lib/firebase/client";
 import { trpc } from "@/lib/trpc/client";
 import {
   Award,
+  BookOpen,
+  Calendar,
+  CheckCircle2,
   ExternalLink,
   FileText,
   GraduationCap,
+  Loader2,
+  Plus,
   ShieldCheck,
+  Upload,
+  User,
+  Building2,
 } from "lucide-react";
-
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-};
+import { useCallback, useState } from "react";
 
 const formatDate = (value: string | undefined): string => {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString();
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 };
 
-const titleize = (value: string): string =>
-  value
-    .replace(/([A-Z])/g, " $1")
-    .replace(/_/g, " ")
-    .trim()
-    .replace(/\b\w/g, (match) => match.toUpperCase());
+const certTypeBadge = (type: string | undefined) => {
+  const styles: Record<string, string> = {
+    academic:
+      "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
+    completion:
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
+    participation:
+      "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300",
+    award:
+      "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300",
+    professional:
+      "bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300",
+  };
+  const label = type || "unknown";
+  return (
+    <Badge className={styles[label] || "bg-gray-100 text-gray-700"}>
+      {label.charAt(0).toUpperCase() + label.slice(1)}
+    </Badge>
+  );
+};
 
 export default function DocumentsPage() {
-  const { data: certificates } = trpc.document.getByType.useQuery({
-    type: "certificate",
-  });
-  const { data: transcript } = trpc.transcript.get.useQuery();
+  const utils = trpc.useUtils();
+  const { data: certificates, isLoading: certsLoading } =
+    trpc.document.getByType.useQuery({
+      type: "certificates",
+    });
+  const { data: transcript, isLoading: transcriptLoading } =
+    trpc.transcript.get.useQuery();
+
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files) {
+        setFiles(Array.from(e.target.files));
+        setUploadError(null);
+      }
+    },
+    [],
+  );
+
+  const handleUpload = useCallback(async () => {
+    if (files.length === 0) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+      setUploadError("User not authenticated. Please log in again.");
+      setIsUploading(false);
+      return;
+    }
+
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+    formData.append("userId", userId);
+
+    try {
+      const response = await fetch("/api/upload-certs", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Upload failed");
+      }
+
+      await response.json();
+      setFiles([]);
+      setUploadOpen(false);
+      utils.document.getByType.invalidate({ type: "certificates" });
+    } catch (error) {
+      console.error("Upload error:", error);
+      setUploadError(
+        error instanceof Error ? error.message : "Upload failed. Try again.",
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  }, [files, utils.document.getByType]);
+
+  const certCount = certificates?.length || 0;
+  const hasTranscript = !!transcript;
 
   return (
-    <div className="space-y-8">
-      <div className="rounded-3xl border border-border bg-gradient-to-br from-blue-50 via-white to-amber-50 p-6 shadow-sm dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="rounded-2xl border border-border bg-gradient-to-br from-blue-50 via-white to-amber-50 p-6 shadow-sm dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-3">
@@ -73,7 +167,7 @@ export default function DocumentsPage() {
                 <div>
                   <p className="text-xs text-muted-foreground">Certificates</p>
                   <p className="text-lg font-semibold text-foreground">
-                    {certificates?.length || 0}
+                    {certCount}
                   </p>
                 </div>
               </CardContent>
@@ -86,7 +180,7 @@ export default function DocumentsPage() {
                 <div>
                   <p className="text-xs text-muted-foreground">Transcripts</p>
                   <p className="text-lg font-semibold text-foreground">
-                    {transcript ? 1 : 0}
+                    {hasTranscript ? 1 : 0}
                   </p>
                 </div>
               </CardContent>
@@ -95,143 +189,284 @@ export default function DocumentsPage() {
         </div>
       </div>
 
+      {/* Tabs */}
       <Tabs defaultValue="certificates" className="space-y-6">
-        <TabsList className="bg-muted">
-          <TabsTrigger value="certificates">Certificates</TabsTrigger>
-          <TabsTrigger value="transcripts">Transcripts</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center justify-between">
+          <TabsList className="bg-muted">
+            <TabsTrigger value="certificates">Certificates</TabsTrigger>
+            <TabsTrigger value="transcripts">Transcripts</TabsTrigger>
+          </TabsList>
 
+          {/* Upload Certificate Dialog */}
+          <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Certificate
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Upload className="h-5 w-5 text-blue-600" />
+                  Upload Certificates
+                </DialogTitle>
+                <DialogDescription>
+                  Upload certificate images or PDFs. Our AI will automatically
+                  extract and organize the information.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-2">
+                <div className="rounded-xl border-2 border-dashed border-border p-6 text-center transition-colors hover:border-blue-500">
+                  <Upload className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+                  <p className="mb-1 text-sm font-medium text-foreground">
+                    Drop files here or click to browse
+                  </p>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Supports PDF, PNG, JPG (multiple files)
+                  </p>
+                  <Input
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg"
+                    multiple
+                    onChange={handleFileChange}
+                    className="mx-auto max-w-xs"
+                  />
+                </div>
+
+                {files.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-foreground">
+                      Selected files ({files.length}):
+                    </p>
+                    <div className="max-h-32 space-y-1 overflow-y-auto rounded-lg bg-muted/50 p-2">
+                      {files.map((f, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-2 text-xs text-muted-foreground"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                          <span className="truncate">{f.name}</span>
+                          <span className="ml-auto whitespace-nowrap">
+                            {(f.size / 1024).toFixed(0)} KB
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {uploadError && (
+                  <p className="text-sm text-red-500">{uploadError}</p>
+                )}
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setUploadOpen(false)}
+                  disabled={isUploading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleUpload}
+                  disabled={files.length === 0 || isUploading}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload {files.length > 0 ? `(${files.length})` : ""}
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Certificates Tab */}
         <TabsContent value="certificates" className="space-y-4">
-          {certificates && certificates.length > 0 ? (
-            <div className="grid gap-6 lg:grid-cols-2">
-              {certificates.map((doc) => {
-                const extracted = doc.extractedData || {};
-                return (
-                  <Card
-                    key={doc.id}
-                    className="group border-border bg-card shadow-sm"
-                  >
-                    <CardHeader className="space-y-2">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <CardTitle className="text-lg">{doc.name}</CardTitle>
-                          <p className="text-sm text-muted-foreground">
-                            {doc.fileName}
+          {certsLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : certificates && certificates.length > 0 ? (
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {certificates.map((doc) => (
+                <Card
+                  key={doc.id}
+                  className="group relative overflow-hidden border-border bg-card shadow-sm transition-shadow hover:shadow-md"
+                >
+                  {/* Type badge at top */}
+                  <div className="absolute top-4 right-4">
+                    {certTypeBadge(doc.certificateType)}
+                  </div>
+
+                  <CardHeader className="pb-3">
+                    <CardTitle className="pr-24 text-base font-bold leading-snug">
+                      {doc.certificateTitle || doc.name || "Certificate"}
+                    </CardTitle>
+                    {doc.programName && (
+                      <p className="text-sm text-muted-foreground">
+                        {doc.programName}
+                      </p>
+                    )}
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
+                    {/* Info grid */}
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-start gap-2">
+                        <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground">
+                            Issuer
+                          </p>
+                          <p className="truncate font-medium text-foreground">
+                            {doc.issuerName || "—"}
                           </p>
                         </div>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground">
+                            Issue Date
+                          </p>
+                          <p className="truncate font-medium text-foreground">
+                            {doc.issueDate || "—"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <User className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground">
+                            Recipient
+                          </p>
+                          <p className="truncate font-medium text-foreground">
+                            {doc.recipientName || "—"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground">
+                            Result
+                          </p>
+                          <p className="truncate font-medium text-foreground">
+                            {doc.result || "—"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between border-t border-border pt-3">
+                      <div className="flex items-center gap-2">
                         {doc.isVerified && (
                           <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-200">
-                            <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+                            <ShieldCheck className="mr-1 h-3 w-3" />
                             Verified
                           </Badge>
                         )}
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(doc.uploadedAt)}
+                        </span>
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-5">
-                      <div className="rounded-2xl border border-border bg-muted/50 p-4">
-                        <div className="grid gap-2 text-sm">
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">
-                              Issuer
-                            </span>
-                            <span className="font-medium text-foreground">
-                              {typeof extracted.issuer === "string"
-                                ? extracted.issuer
-                                : "—"}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">
-                              Issue Date
-                            </span>
-                            <span className="font-medium text-foreground">
-                              {formatDate(
-                                typeof extracted.issueDate === "string"
-                                  ? extracted.issueDate
-                                  : undefined,
-                              )}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">
-                              Level / Grade
-                            </span>
-                            <span className="font-medium text-foreground">
-                              {typeof extracted.level === "string"
-                                ? extracted.level
-                                : typeof extracted.grade === "string"
-                                  ? extracted.grade
-                                  : "—"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {Object.keys(extracted).length > 0 && (
-                        <div className="grid gap-2 text-sm">
-                          {Object.entries(extracted).map(([key, value]) => (
-                            <div
-                              key={key}
-                              className="flex items-start justify-between gap-4 border-b border-border/60 pb-2"
-                            >
-                              <span className="text-muted-foreground">
-                                {titleize(key)}
-                              </span>
-                              <span className="text-right font-medium text-foreground">
-                                {Array.isArray(value)
-                                  ? value.join(", ")
-                                  : String(value)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-                        <span>{formatFileSize(doc.fileSize)}</span>
-                        <span>Uploaded {formatDate(doc.uploadedAt)}</span>
-                        <Button variant="outline" size="sm" asChild>
+                      {doc.fileUrl && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs"
+                          asChild
+                        >
                           <a
                             href={doc.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            <ExternalLink className="mr-2 h-4 w-4" />
-                            Open
+                            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                            View
                           </a>
                         </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {/* Add more card */}
+              <Card
+                className="flex cursor-pointer items-center justify-center border-dashed border-border transition-colors hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20"
+                onClick={() => setUploadOpen(true)}
+              >
+                <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950">
+                    <Plus className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+                  </div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Add Certificate
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           ) : (
-            <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-                <Award className="h-10 w-10 text-muted-foreground" />
-                <p className="text-lg font-semibold text-foreground">
-                  No certificates yet
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Upload certificates to keep them organized for applications.
-                </p>
+            <Card
+              className="cursor-pointer border-dashed transition-colors hover:border-blue-500"
+              onClick={() => setUploadOpen(true)}
+            >
+              <CardContent className="flex flex-col items-center gap-4 py-16 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950">
+                  <Award className="h-8 w-8 text-blue-600 dark:text-blue-300" />
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-foreground">
+                    No certificates yet
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Click here to upload your first certificate. Our AI will
+                    extract all the details automatically.
+                  </p>
+                </div>
+                <Button className="mt-2 bg-blue-600 hover:bg-blue-700">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload Certificate
+                </Button>
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
+        {/* Transcripts Tab */}
         <TabsContent value="transcripts" className="space-y-4">
-          {transcript ? (
-            <div className="grid gap-6 lg:grid-cols-2">
-              <Card className="group border-border bg-card shadow-sm">
-                <CardHeader className="space-y-2">
+          {transcriptLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : transcript ? (
+            <div className="grid gap-6 xl:grid-cols-3">
+              {/* Transcript overview card */}
+              <Card className="border-border bg-card shadow-sm xl:col-span-1">
+                <CardHeader>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <CardTitle className="text-lg">
                         Academic Transcript
                       </CardTitle>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="mt-1 text-sm text-muted-foreground">
                         Graduation year {transcript.year}
                       </p>
                     </div>
@@ -241,85 +476,135 @@ export default function DocumentsPage() {
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-5">
-                  <div className="grid gap-3 rounded-2xl border border-border bg-muted/50 p-4 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">GPA</span>
-                      <span className="font-medium text-foreground">
-                        {transcript.gpa}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Year</span>
-                      <span className="font-medium text-foreground">
+                <CardContent className="space-y-4">
+                  {/* GPA highlight */}
+                  <div className="rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 p-5 text-white">
+                    <p className="text-xs font-medium uppercase tracking-wider opacity-80">
+                      Grade Point Average
+                    </p>
+                    <p className="mt-1 text-4xl font-bold">
+                      {transcript.gpa || "N/A"}
+                    </p>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl border border-border bg-muted/50 p-4 text-center">
+                      <p className="text-2xl font-bold text-foreground">
                         {transcript.year}
-                      </span>
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">Year</p>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Subjects</span>
-                      <span className="font-medium text-foreground">
+                    <div className="rounded-xl border border-border bg-muted/50 p-4 text-center">
+                      <p className="text-2xl font-bold text-foreground">
                         {transcript.subjects.length}
-                      </span>
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Subjects
+                      </p>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-border p-4">
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>Subject Grades</span>
-                      <span>{transcript.subjects.length} entries</span>
-                    </div>
-                    <div className="mt-3 grid gap-2 text-sm">
-                      {transcript.subjects.map((subject, index) => (
-                        <div
-                          key={`${subject.name}-${index}`}
-                          className="flex items-center justify-between border-b border-border/60 pb-2"
-                        >
-                          <div className="flex flex-col">
-                            <span className="font-medium text-foreground">
-                              {subject.name}
-                            </span>
-                            {subject.code && (
-                              <span className="text-xs text-muted-foreground">
-                                {subject.code}
-                              </span>
-                            )}
-                          </div>
-                          <span className="font-semibold text-foreground">
-                            {subject.grade}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+                  {/* Upload info */}
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span>Uploaded {formatDate(transcript.uploadedAt)}</span>
                     {transcript.fileUrl && (
-                      <Button variant="outline" size="sm" asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs"
+                        asChild
+                      >
                         <a
                           href={transcript.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          <ExternalLink className="mr-2 h-4 w-4" />
-                          Open
+                          <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                          View Original
                         </a>
                       </Button>
                     )}
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Subject grades card */}
+              <Card className="border-border bg-card shadow-sm xl:col-span-2">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-blue-600" />
+                      <CardTitle className="text-lg">Subject Grades</CardTitle>
+                    </div>
+                    <Badge variant="secondary">
+                      {transcript.subjects.length} subjects
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {transcript.subjects.map((subject, index) => {
+                      const grade = Number(subject.grade);
+                      const gradeColor =
+                        grade >= 4
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : grade >= 3
+                            ? "text-blue-600 dark:text-blue-400"
+                            : grade >= 2
+                              ? "text-amber-600 dark:text-amber-400"
+                              : "text-red-600 dark:text-red-400";
+                      const gradeBg =
+                        grade >= 4
+                          ? "bg-emerald-100 dark:bg-emerald-950"
+                          : grade >= 3
+                            ? "bg-blue-100 dark:bg-blue-950"
+                            : grade >= 2
+                              ? "bg-amber-100 dark:bg-amber-950"
+                              : "bg-red-100 dark:bg-red-950";
+
+                      return (
+                        <div
+                          key={`${subject.name}-${index}`}
+                          className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-4 py-3 transition-colors hover:bg-muted/60"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-foreground">
+                              {subject.name}
+                            </p>
+                            {subject.code && (
+                              <p className="text-xs text-muted-foreground">
+                                {subject.code}
+                              </p>
+                            )}
+                          </div>
+                          <div
+                            className={`ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${gradeBg} ${gradeColor}`}
+                          >
+                            {subject.grade}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           ) : (
             <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-                <GraduationCap className="h-10 w-10 text-muted-foreground" />
-                <p className="text-lg font-semibold text-foreground">
-                  No transcripts yet
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Upload transcripts to keep them ready for review.
-                </p>
+              <CardContent className="flex flex-col items-center gap-4 py-16 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950">
+                  <GraduationCap className="h-8 w-8 text-emerald-600 dark:text-emerald-300" />
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-foreground">
+                    No transcripts yet
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Upload your academic transcript to keep it ready for
+                    scholarship applications.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           )}

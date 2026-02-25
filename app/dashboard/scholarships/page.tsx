@@ -221,7 +221,8 @@ export default function ScholarshipsPage() {
   };
 
   const visibleScholarships = useMemo(
-    () => filteredScholarships.filter((scholarship) => Boolean(scholarship.uid)),
+    () =>
+      filteredScholarships.filter((scholarship) => Boolean(scholarship.uid)),
     [filteredScholarships],
   );
 
@@ -304,7 +305,7 @@ export default function ScholarshipsPage() {
         </div>
 
         {/* Search and Filters */}
-        <Card className="mb-8">
+        <Card className="mb-3">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
@@ -341,35 +342,14 @@ export default function ScholarshipsPage() {
             </div>
 
             {showFilters && (
-              <div className="flex flex-row  justify-between   mt-4 pt-4 border-t">
-                <div>
-                  <Label className="mb-2 block text-sm">Study Level</Label>
-                  <Select
-                    value={selectedLevel}
-                    onValueChange={setSelectedLevel}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All levels" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={null!}>All levels</SelectItem>
-                      <SelectItem value="high_school">High School</SelectItem>
-                      <SelectItem value="undergraduate">
-                        Undergraduate
-                      </SelectItem>
-                      <SelectItem value="graduate">Graduate</SelectItem>
-                      <SelectItem value="postgraduate">Postgraduate</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
+              <div className="flex flex-row items-center justify-end gap-10   mt-4 pt-4 border-t">
                 <div className="">
                   <Label className="mb-2 block text-sm">Benefits</Label>
                   <Select
                     value={selectedBenefit}
                     onValueChange={setSelectedBenefit}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Any benefit" />
                     </SelectTrigger>
                     <SelectContent>
@@ -421,14 +401,16 @@ export default function ScholarshipsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-            )}
-
-            {showFilters && hasActiveFilters && (
-              <div className="flex justify-end mt-4">
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  Clear all filters
-                </Button>
+                {showFilters && hasActiveFilters && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="self-end-safe"
+                    onClick={clearFilters}
+                  >
+                    Clear all filters
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>
@@ -476,7 +458,7 @@ export default function ScholarshipsPage() {
                     const ext = scholarship as typeof scholarship &
                       ScholarshipExtras;
                     const eligibility = getEligibilityStatus(
-                      scholarship.uid,
+                      scholarship.uid || "",
                     );
                     const userApp = userApplications?.find(
                       (app) => app.scholarshipId === scholarship.uid,
@@ -486,13 +468,17 @@ export default function ScholarshipsPage() {
                       userApp?.status === "accepted";
                     const detailsUrl =
                       scholarship.applicationLink ||
-                      (scholarship as typeof scholarship & {
-                        applicationUrl?: string;
-                        sourceUrl?: string;
-                      }).applicationUrl ||
-                      (scholarship as typeof scholarship & {
-                        sourceUrl?: string;
-                      }).sourceUrl ||
+                      (
+                        scholarship as typeof scholarship & {
+                          applicationUrl?: string;
+                          sourceUrl?: string;
+                        }
+                      ).applicationUrl ||
+                      (
+                        scholarship as typeof scholarship & {
+                          sourceUrl?: string;
+                        }
+                      ).sourceUrl ||
                       "";
                     const isStarting =
                       startApplication.isPending &&
@@ -591,12 +577,14 @@ export default function ScholarshipsPage() {
                             ) : eligibility.eligible ? (
                               <Button
                                 onClick={() =>
-                                  handleStartApplication(scholarship.uid)
+                                  handleStartApplication(scholarship.uid || "")
                                 }
                                 disabled={isStarting}
                                 className="rounded-xl flex-1"
                               >
-                                {isStarting ? "Starting..." : "Begin Selection Process"}
+                                {isStarting
+                                  ? "Starting..."
+                                  : "Begin Selection Process"}
                               </Button>
                             ) : (
                               <Button

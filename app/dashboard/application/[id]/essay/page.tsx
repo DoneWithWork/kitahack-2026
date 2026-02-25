@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useOptimistic } from "react";
 import { useParams } from "next/navigation";
+import ReactMarkdown from "react-markdown";
 import { trpc } from "@/lib/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Loader2,
   Save,
@@ -15,8 +17,10 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
+  History,
 } from "lucide-react";
 import { AdminModeToggle } from "@/components/admin-mode-toggle";
+import { formatDateTime } from "@/lib/utils/dates";
 
 export default function EssayPage() {
   const params = useParams();
@@ -25,9 +29,15 @@ export default function EssayPage() {
   const [draft, setDraft] = useState("");
   const [localDraft, setLocalDraft] = useState("");
   const [aiSuggestion, setAiSuggestion] = useState("");
+  const [aiHistoryCursor, setAiHistoryCursor] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [showAdminHighlight, setShowAdminHighlight] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [optimisticSubmitted, setOptimisticSubmitted] = useOptimistic(
+    false,
+    (state, newValue: boolean) => newValue,
+  );
 
   const utils = trpc.useUtils();
   const { data: appData, isLoading: appLoading } =
@@ -38,15 +48,22 @@ export default function EssayPage() {
 
   const saveMutation = trpc.application.saveEssayDraft.useMutation({
     onSuccess: () => {
-      utils.application.getApplicationById.invalidate();
+      utils.application.getApplicationById.invalidate({ applicationId });
     },
   });
   const submitMutation = trpc.application.submitEssay.useMutation({
     onSuccess: () => {
-      utils.application.getApplicationById.invalidate();
+      utils.application.getApplicationById.invalidate({ applicationId });
     },
   });
   const assistanceMutation = trpc.application.getEssayAssistance.useMutation();
+
+  const aiHistory = useMemo(() => {
+    const entries = appData?.application.stages.essay.aiHistory ?? [];
+    return [...entries].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }, [appData?.application.stages.essay.aiHistory]);
 
   useEffect(() => {
     if (appData?.application && appData.scholarship) {
@@ -54,6 +71,28 @@ export default function EssayPage() {
       setLocalDraft(appData.application.stages.essay.draft || "");
     }
   }, [appData]);
+
+  useEffect(() => {
+    if (aiHistoryCursor || aiHistory.length === 0) return;
+    if (!aiSuggestion) {
+      setAiSuggestion(aiHistory[0].response);
+      setAiHistoryCursor(aiHistory[0].id);
+      return;
+    }
+    const match = aiHistory.find((entry) => entry.response === aiSuggestion);
+    if (match) {
+      setAiHistoryCursor(match.id);
+    }
+  }, [aiHistory, aiHistoryCursor, aiSuggestion]);
+
+  useEffect(() => {
+    if (showAdminHighlight) {
+      const timer = setTimeout(() => {
+        setShowAdminHighlight(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showAdminHighlight]);
 
   if (appLoading) {
     return (
@@ -78,10 +117,9 @@ export default function EssayPage() {
   const { application, scholarship } = appData;
   const essayStage = application.stages.essay;
   const isReviewed = essayStage.checked;
+  const isSubmitted = essayStage.submitted || optimisticSubmitted;
   const isEditable =
-    !isReviewed &&
-    application.currentStage === "essay" &&
-    !essayStage.submitted;
+    !isReviewed && application.currentStage === "essay" && !isSubmitted;
 
   const handleSaveDraft = async () => {
     try {
@@ -99,6 +137,7 @@ export default function EssayPage() {
   const handleSubmit = async () => {
     if (!localDraft.trim() || isSubmitting) return;
     setIsSubmitting(true);
+    setOptimisticSubmitted(true);
 
     try {
       await submitMutation.mutateAsync({
@@ -109,6 +148,7 @@ export default function EssayPage() {
       setShowAdminHighlight(true);
     } catch (err) {
       console.error("Error submitting essay:", err);
+      setOptimisticSubmitted(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -118,10 +158,13 @@ export default function EssayPage() {
     setAiLoading(true);
     try {
       const result = await assistanceMutation.mutateAsync({
+        applicationId,
         scholarshipId: application.scholarshipId,
         currentDraft: localDraft,
       });
       setAiSuggestion(result.assistance);
+      setAiHistoryCursor(null);
+      utils.application.getApplicationById.invalidate({ applicationId });
     } catch (err) {
       console.error("Error getting suggestions:", err);
       setAiSuggestion(
@@ -134,20 +177,28 @@ export default function EssayPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground">Essay Stage</p>
+          <h1 className="text-2xl font-semibold text-foreground">
+            {scholarship.title}
+          </h1>
+        </div>
         <AdminModeToggle
           applicationId={applicationId}
           highlight={showAdminHighlight}
         />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="w-full space-y-6 xl:order-1">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl font-bold">
-                {scholarship.title}
+              <CardTitle className="text-lg font-semibold">
+                Your Essay Response
               </CardTitle>
-              <p className="text-muted-foreground">Essay Stage</p>
+              <p className="text-sm text-muted-foreground">
+                Draft your response and submit when ready.
+              </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -223,19 +274,20 @@ export default function EssayPage() {
                       !isEditable ||
                       !localDraft.trim() ||
                       isSubmitting ||
-                      submitMutation.isPending
+                      submitMutation.isPending ||
+                      optimisticSubmitted
                     }
                   >
-                    {submitMutation.isPending ? (
+                    {submitMutation.isPending || optimisticSubmitted ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Send className="h-4 w-4" />
                     )}
-                    Submit Essay
+                    {optimisticSubmitted ? "Submitted" : "Submit Essay"}
                   </Button>
                 </div>
 
-                {essayStage.submitted && !isReviewed && (
+                {isSubmitted && !isReviewed && (
                   <p className="text-sm text-muted-foreground mt-2">
                     Essay submitted. Waiting for review.
                   </p>
@@ -245,60 +297,100 @@ export default function EssayPage() {
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 xl:order-2">
           <Card className="sticky top-6 max-h-[calc(100vh-6rem)] flex flex-col">
             <CardHeader className="shrink-0">
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
                 AI Writing Assistant
               </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Suggestions stay scoped to this essay stage.
+              </p>
             </CardHeader>
             <CardContent className="space-y-4 overflow-y-auto min-h-0 pr-1">
-              <p className="text-sm text-muted-foreground">
-                Get personalized suggestions to improve your essay based on the
-                scholarship requirements.
-              </p>
-
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleGetSuggestions}
-                disabled={aiLoading}
-              >
-                {aiLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4" />
-                )}
-                {localDraft.trim() ? "Improve My Draft" : "Get Suggestions"}
-              </Button>
-
-              {aiSuggestion && (
-                <div className="mt-4 p-4 bg-muted rounded-lg">
-                  <h4 className="font-semibold mb-2">AI Feedback</h4>
-                  <div className="text-sm whitespace-pre-wrap prose dark:prose-invert max-w-none">
-                    {aiSuggestion}
-                  </div>
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGetSuggestions}
+                  disabled={aiLoading}
+                >
+                  {aiLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+                  {localDraft.trim() ? "Improve My Draft" : "Get Suggestions"}
+                </Button>
+                <div className="text-xs text-muted-foreground">
+                  {aiHistory.length} saved suggestion{aiHistory.length === 1 ? "" : "s"}
                 </div>
-              )}
+              </div>
 
-              <Separator />
+              <div className="grid grid-cols-1 lg:grid-cols-[200px_minmax(0,1fr)] gap-4">
+                <div className="rounded-lg border border-border bg-muted/40">
+                  <div className="flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground">
+                    History
+                    <History className="h-3.5 w-3.5" />
+                  </div>
+                  <ScrollArea className="h-[220px]">
+                    <div className="p-2 space-y-2">
+                      {aiHistory.length === 0 && (
+                        <p className="text-xs text-muted-foreground px-2 py-4">
+                          No suggestions yet.
+                        </p>
+                      )}
+                      {aiHistory.map((entry) => (
+                        <button
+                          key={entry.id}
+                          type="button"
+                          onClick={() => {
+                            setAiSuggestion(entry.response);
+                            setAiHistoryCursor(entry.id);
+                          }}
+                          className={`w-full rounded-md border px-2 py-2 text-left text-xs transition hover:border-primary/40 hover:bg-background ${
+                            aiHistoryCursor === entry.id
+                              ? "border-primary/60 bg-background"
+                              : "border-transparent"
+                          }`}
+                        >
+                          <p className="font-medium text-foreground">
+                            {entry.title}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {formatDateTime(entry.createdAt)}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
 
-              <div className="space-y-2">
-                <h4 className="font-semibold text-sm">Scholarship Details</h4>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  <p>
-                    <span className="font-medium text-foreground">
-                      Provider:
-                    </span>{" "}
-                    {scholarship.sourceUrl}
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">
-                      Benefits:
-                    </span>{" "}
-                    {scholarship.benefits.length} items
-                  </p>
+                <div className="rounded-xl border border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="h-4 w-4 text-blue-600" />
+                    <h4 className="font-semibold text-blue-900 dark:text-blue-100">
+                      AI Feedback
+                    </h4>
+                  </div>
+                  {aiSuggestion ? (
+                    <div
+                      className="prose prose-sm dark:prose-invert max-w-none 
+                      prose-headings:font-semibold prose-headings:text-foreground
+                      prose-p:text-foreground/90 prose-p:leading-relaxed
+                      prose-ul:text-foreground/90 prose-ol:text-foreground/90
+                      prose-li:marker:text-blue-500
+                      prose-strong:text-foreground prose-code:text-blue-600 dark:prose-code:text-blue-400 prose-code:bg-blue-100 dark:prose-code:bg-blue-900/30 prose-code:px-1 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+                      prose-blockquote:border-blue-300 dark:prose-blockquote:border-blue-700 prose-blockquote:bg-transparent prose-blockquote:not-italic"
+                    >
+                      <ReactMarkdown>{aiSuggestion}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Ask for suggestions to see feedback here.
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>

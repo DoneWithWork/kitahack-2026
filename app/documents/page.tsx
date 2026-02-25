@@ -370,7 +370,7 @@ export default function DocumentsPage() {
             <span className="text-xl font-bold">ScholarGuide</span>
           </div>
           <nav className="flex gap-4">
-            <Link href="/dashboard">
+            <Link href="/dashboard/scholarships">
               <Button variant="ghost">Dashboard</Button>
             </Link>
             <Link href="/scholarships">

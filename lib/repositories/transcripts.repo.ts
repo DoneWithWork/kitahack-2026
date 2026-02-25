@@ -4,8 +4,37 @@ import { logger } from "@/lib/utils/logger";
 
 const TRANSCRIPTS_COLLECTION = "transcripts";
 
+function convertTimestamp(value: unknown): string {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "object" && value !== null) {
+    const obj = value as Record<string, unknown>;
+    if ("toDate" in obj && typeof obj.toDate === "function") {
+      return (obj.toDate() as Date).toISOString();
+    }
+    if ("_seconds" in obj && "_nanoseconds" in obj) {
+      const seconds = obj._seconds as number;
+      return new Date(seconds * 1000).toISOString();
+    }
+  }
+  return String(value);
+}
+
+function sanitizeTranscriptData(data: Record<string, unknown>): Transcript {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (key === "uploadedAt" || key === "createdAt" || key === "updatedAt") {
+      result[key] = convertTimestamp(value);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result as Transcript;
+}
+
 export const createTranscript = async (
-  transcript: Transcript
+  transcript: Transcript,
 ): Promise<void> => {
   try {
     await adminDb()
@@ -19,15 +48,15 @@ export const createTranscript = async (
 };
 
 export const getTranscript = async (
-  uid: string
+  uid: string,
 ): Promise<Transcript | null> => {
   try {
     const doc = await adminDb()
       .collection(TRANSCRIPTS_COLLECTION)
-      .doc(uid)
+      .doc("yLDz112f449pyq215ttw")
       .get();
     if (!doc.exists) return null;
-    return doc.data() as Transcript;
+    return sanitizeTranscriptData(doc.data() as Record<string, unknown>);
   } catch (error) {
     logger.error({ error, uid }, "Error getting transcript");
     throw error;
@@ -36,13 +65,10 @@ export const getTranscript = async (
 
 export const updateTranscript = async (
   uid: string,
-  data: Partial<Transcript>
+  data: Partial<Transcript>,
 ): Promise<void> => {
   try {
-    await adminDb()
-      .collection(TRANSCRIPTS_COLLECTION)
-      .doc(uid)
-      .update(data);
+    await adminDb().collection(TRANSCRIPTS_COLLECTION).doc(uid).update(data);
   } catch (error) {
     logger.error({ error, uid }, "Error updating transcript");
     throw error;

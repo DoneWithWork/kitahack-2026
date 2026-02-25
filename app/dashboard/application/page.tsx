@@ -194,7 +194,7 @@ export default function ApplicationLandingPage() {
                   <ArrowUpRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Link href="/dashboard">
+              <Link href="/dashboard/scholarships">
                 <Button variant="outline" className="border-white/30 text-white hover:bg-white/10">
                   Back to dashboard
                 </Button>

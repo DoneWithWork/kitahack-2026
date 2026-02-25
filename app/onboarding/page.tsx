@@ -40,7 +40,7 @@ export default function OnboardingPage() {
   useEffect(() => {
     if (onboardingStatus) {
       if (onboardingStatus.onboardingCompleted) {
-        router.push("/dashboard");
+        router.push("/dashboard/scholarships");
       } else {
         console.log(onboardingStatus.onboardingStep);
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -95,7 +95,9 @@ export default function OnboardingPage() {
           />
         );
       case 4:
-        return <CompleteStep onComplete={() => router.push("/dashboard")} />;
+        return (
+          <CompleteStep onComplete={() => router.push("/dashboard/scholarships")} />
+        );
       default:
         return <WelcomeStep onNext={() => setCurrentStep(1)} />;
     }

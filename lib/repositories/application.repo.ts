@@ -4,6 +4,35 @@ import { logger } from "@/lib/utils/logger";
 
 const SCHOLARSHIPS_COLLECTION = "scholarships";
 
+function convertTimestamp(value: unknown): string {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "object" && value !== null) {
+    const obj = value as Record<string, unknown>;
+    if ("toDate" in obj && typeof obj.toDate === "function") {
+      return (obj.toDate() as Date).toISOString();
+    }
+    if ("_seconds" in obj && "_nanoseconds" in obj) {
+      const seconds = obj._seconds as number;
+      return new Date(seconds * 1000).toISOString();
+    }
+  }
+  return String(value);
+}
+
+function sanitizeApplicationData(data: Record<string, unknown>): Application {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (key === "createdAt" || key === "updatedAt") {
+      result[key] = convertTimestamp(value);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result as Application;
+}
+
 export const createApplicationInScholarship = async (
   scholarshipId: string,
   applicationId: string,
@@ -38,7 +67,7 @@ export const getApplicationById = async (
       .get();
 
     if (!doc.exists) return null;
-    return doc.data() as Application;
+    return sanitizeApplicationData(doc.data() as Record<string, unknown>);
   } catch (error) {
     logger.error(
       { error, scholarshipId, applicationId },
@@ -82,7 +111,7 @@ export const getApplicationsForScholarship = async (
       .collection("applications")
       .orderBy("createdAt", "desc")
       .get();
-    return snapshot.docs.map((doc) => doc.data() as Application);
+    return snapshot.docs.map((doc) => sanitizeApplicationData(doc.data() as Record<string, unknown>));
   } catch (error) {
     logger.error({ error, scholarshipId }, "Error getting applications");
     throw error;
@@ -105,7 +134,7 @@ export const getUserApplicationsForScholarship = async (
     if (snapshot.empty) return null;
     const doc = snapshot.docs[0];
     return {
-      application: doc.data() as Application,
+      application: sanitizeApplicationData(doc.data() as Record<string, unknown>),
       applicationId: doc.id,
     };
   } catch (error) {
@@ -132,7 +161,7 @@ export const getApplicationByApplicationId = async (
         .get();
 
       if (appDoc.exists) {
-        const application = appDoc.data() as Application;
+        const application = sanitizeApplicationData(appDoc.data() as Record<string, unknown>);
         return { application, scholarshipId: scholarshipDoc.id };
       }
     }

@@ -47,7 +47,7 @@ export default function ProfilePage() {
             <Link href="/">
               <Button variant="ghost">Home</Button>
             </Link>
-            <Link href="/dashboard">
+            <Link href="/dashboard/scholarships">
               <Button variant="ghost">Dashboard</Button>
             </Link>
           </nav>

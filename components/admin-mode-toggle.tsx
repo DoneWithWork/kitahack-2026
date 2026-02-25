@@ -16,18 +16,30 @@ export function AdminModeToggle({ applicationId, highlight }: AdminModeTogglePro
 
   const appId = applicationId || (params.id as string);
 
-  const { data: roleData, refetch: refetchRole } = trpc.admin.getUserRole.useQuery(
+  const { data: roleData } = trpc.admin.getUserRole.useQuery(
     undefined,
     { enabled: !!appId }
   );
 
+  const { data: appData } = trpc.application.getApplicationById.useQuery(
+    { applicationId: appId! },
+    { enabled: !!appId }
+  );
+
+  const utils = trpc.useUtils();
+
   const toggleMutation = trpc.admin.toggleAdminMode.useMutation({
-    onSuccess: async (data) => {
-      await refetchRole();
-      if (data.role === "admin_simulated") {
+    onSuccess: (data) => {
+      const nextRole = data.role === "admin_simulated" ? "admin_simulated" : "user";
+      utils.admin.getUserRole.setData(undefined, {
+        role: nextRole,
+        hackathonMode: nextRole === "admin_simulated",
+      });
+      if (nextRole === "admin_simulated") {
         router.replace(`/dashboard/admin?applicationId=${appId}`);
       } else {
-        router.replace(`/dashboard/application/${appId}/essay`);
+        const currentStage = appData?.application.currentStage || "essay";
+        router.replace(`/dashboard/application/${appId}/${currentStage}`);
       }
     },
   });

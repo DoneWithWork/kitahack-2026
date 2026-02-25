@@ -1,7 +1,7 @@
 import { generateContent } from "@/lib/ai/gemini";
 import { logger } from "@/lib/utils/logger";
 import type { User } from "@/lib/schemas/user.schema";
-import { Scholarship } from "../scholarships/constants";
+import type { Scholarship } from "@/lib/schemas/application.schema";
 
 export const generateEssayDraft = async (
   user: User,
@@ -13,7 +13,7 @@ export const generateEssayDraft = async (
 
     const userPrompt = `
 Scholarship: ${scholarship.title}
-Provider: ${scholarship.provider}
+Provider: ${scholarship.provider ?? "Not specified"}
 Description: ${scholarship.description}
 
 Student Profile:
@@ -74,7 +74,7 @@ export const generateInterviewQuestions = async (
 Generate 5 common interview questions for this scholarship:
 
 Scholarship: ${scholarship.title}
-Provider: ${scholarship.provider}
+Provider: ${scholarship.provider ?? "Not specified"}
 Description: ${scholarship.description}
 
 Provide the questions in a numbered list format.

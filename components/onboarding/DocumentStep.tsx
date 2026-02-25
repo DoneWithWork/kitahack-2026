@@ -28,7 +28,7 @@ export function DocumentsStep({
   const [isUploading, setIsUploading] = useState(false);
 
   const documentsQuery = trpc.document.getByType.useQuery({
-    type: "certificate",
+    type: "certificates",
   });
   const saveStatus = trpc.onboarding.saveDocumentsStatus.useMutation();
 

@@ -15,6 +15,14 @@ export const documentSchema = z.object({
   isVerified: z.boolean().default(false),
   uploadedAt: z.string(),
   updatedAt: z.string(),
+  certificateTitle: z.string().optional(),
+  certificateType: z.string().optional(),
+  issuerName: z.string().optional(),
+  programName: z.string().optional(),
+  recipientName: z.string().optional(),
+  issueDate: z.string().optional(),
+  result: z.string().optional(),
+  storagePath: z.string().optional(),
 });
 
 export const certificateExtractedDataSchema = z.object({

@@ -36,6 +36,14 @@ export const scholarshipSchema = z.object({
 export type Scholarship = z.infer<typeof scholarshipSchema>;
 export type MinimumGrades = z.infer<typeof minimumGradesSchema>;
 
+export const aiHistoryEntrySchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  title: z.string(),
+  response: z.string(),
+  createdAt: z.string(),
+});
+
 export const essayStageSchema = z.object({
   draft: z.string().optional(),
   submitted: z.boolean().default(false),
@@ -43,6 +51,7 @@ export const essayStageSchema = z.object({
   passed: z.boolean().default(false),
   reviewerNotes: z.string().nullable(),
   aiUsed: z.boolean().default(false),
+  aiHistory: z.array(aiHistoryEntrySchema).default([]),
 });
 
 export const groupStageSchema = z.object({
@@ -50,6 +59,7 @@ export const groupStageSchema = z.object({
   passed: z.boolean().default(false),
   reviewerNotes: z.string().nullable(),
   aiPreparationUsed: z.boolean().default(false),
+  aiHistory: z.array(aiHistoryEntrySchema).default([]),
 });
 
 export const interviewerSchema = z.object({
@@ -66,6 +76,7 @@ export const interviewStageSchema = z.object({
   passed: z.boolean().default(false),
   reviewerNotes: z.string().nullable(),
   aiPreparationGenerated: z.boolean().default(false),
+  aiHistory: z.array(aiHistoryEntrySchema).default([]),
   interviewer: interviewerSchema.nullable(),
   scheduledAt: z.string().nullable(),
   reflectionNotes: z.string().nullable(),
@@ -111,6 +122,7 @@ export type EssayStage = z.infer<typeof essayStageSchema>;
 export type GroupStage = z.infer<typeof groupStageSchema>;
 export type Interviewer = z.infer<typeof interviewerSchema>;
 export type InterviewStage = z.infer<typeof interviewStageSchema>;
+export type AiHistoryEntry = z.infer<typeof aiHistoryEntrySchema>;
 export type ApplicationStages = z.infer<typeof applicationStagesSchema>;
 export type EligibilitySnapshot = z.infer<typeof eligibilitySnapshotSchema>;
 export type AdminAudit = z.infer<typeof adminAuditSchema>;

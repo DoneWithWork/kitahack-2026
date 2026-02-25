@@ -41,7 +41,7 @@ export default function AuthPage() {
       if (result.isNew || !result.success) {
         router.push("/onboarding");
       } else {
-        router.push("/dashboard");
+        router.push("/dashboard/scholarships");
       }
     } catch (err) {
       setError("Failed to sign in with Google. Please try again.");

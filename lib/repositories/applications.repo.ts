@@ -5,6 +5,35 @@ import { logger } from "@/lib/utils/logger";
 const MATCHES_COLLECTION = "matches";
 const APPLICATIONS_COLLECTION = "applications";
 
+function convertTimestamp(value: unknown): string {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "object" && value !== null) {
+    const obj = value as Record<string, unknown>;
+    if ("toDate" in obj && typeof obj.toDate === "function") {
+      return (obj.toDate() as Date).toISOString();
+    }
+    if ("_seconds" in obj && "_nanoseconds" in obj) {
+      const seconds = obj._seconds as number;
+      return new Date(seconds * 1000).toISOString();
+    }
+  }
+  return String(value);
+}
+
+function sanitizeData<T>(data: Record<string, unknown>, fields: string[]): T {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (fields.includes(key)) {
+      result[key] = convertTimestamp(value);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result as T;
+}
+
 export const createMatch = async (uid: string, match: Match): Promise<void> => {
   try {
     await adminDb()
@@ -30,7 +59,7 @@ export const getMatches = async (uid: string): Promise<Match[]> => {
       .collection("items")
       .orderBy("score", "desc")
       .get();
-    return snapshot.docs.map((doc) => doc.data() as Match);
+    return snapshot.docs.map((doc) => sanitizeData<Match>(doc.data() as Record<string, unknown>, ["createdAt", "updatedAt"]));
   } catch (error) {
     logger.error({ error, uid }, "Error getting matches");
     throw error;
@@ -65,7 +94,7 @@ export const getApplications = async (uid: string): Promise<Application[]> => {
       .collection("items")
       .orderBy("deadline", "asc")
       .get();
-    return snapshot.docs.map((doc) => doc.data() as Application);
+    return snapshot.docs.map((doc) => sanitizeData<Application>(doc.data() as Record<string, unknown>, ["createdAt", "updatedAt", "deadline"]));
   } catch (error) {
     logger.error({ error, uid }, "Error getting applications");
     throw error;

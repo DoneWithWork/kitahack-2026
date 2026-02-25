@@ -2,15 +2,15 @@ import { z } from "zod";
 
 export const subjectSchema = z.object({
   name: z.string(),
-  grade: z.number().min(0).max(100),
+  grade: z.union([z.string(), z.number()]),
   code: z.string().optional(),
 });
 
 export const transcriptSchema = z.object({
   uid: z.string(),
   subjects: z.array(subjectSchema),
-  gpa: z.number().min(0).max(100),
-  year: z.number().int().min(2000).max(2100),
+  gpa: z.union([z.string(), z.number()]),
+  year: z.union([z.string(), z.number()]),
   uploadedAt: z.string(),
   fileUrl: z.string().url().optional(),
 });

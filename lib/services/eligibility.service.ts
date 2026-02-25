@@ -7,6 +7,21 @@ export interface EligibilityResult {
   reasons: string[];
 }
 
+function convertGradeToNumber(grade: string): number | null {
+  const gradeMap: Record<string, number> = {
+    "A+": 100, "A": 95, "A-": 90,
+    "B+": 89, "B": 85, "B-": 80,
+    "C+": 79, "C": 75, "C-": 70,
+    "D+": 69, "D": 65, "D-": 60,
+    "E": 50, "F": 0,
+  };
+  const match = grade.match(/^([A-F][+-]?|A\+|E|F)/i);
+  if (match) {
+    return gradeMap[match[0].toUpperCase()] ?? null;
+  }
+  return null;
+}
+
 export const checkEligibility = (
   user: User,
   transcript: Transcript | null,
@@ -42,10 +57,14 @@ export const checkEligibility = (
 
       if (!userSubject) {
         reasons.push(`Required subject "${subject}" not found`);
-      } else if (userSubject.grade < minGrade) {
-        reasons.push(
-          `Grade requirement not met for ${subject}. Required: ${minGrade}, Got: ${userSubject.grade}`,
-        );
+      } else {
+        const userGrade = userSubject.grade;
+        const userGradeNum = typeof userGrade === "string" ? convertGradeToNumber(userGrade) : userGrade;
+        if (userGradeNum !== null && userGradeNum < (minGrade as number)) {
+          reasons.push(
+            `Grade requirement not met for ${subject}. Required: ${minGrade}, Got: ${userGrade}`,
+          );
+        }
       }
     }
   }

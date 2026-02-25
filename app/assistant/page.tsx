@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import ReactMarkdown from "react-markdown";
 import {
   Sparkles,
   GraduationCap,
@@ -120,7 +121,7 @@ export default function AssistantPage() {
             <span className="text-xl font-bold">ScholarGuide</span>
           </div>
           <nav className="flex gap-4">
-            <Link href="/dashboard">
+            <Link href="/dashboard/scholarships">
               <Button variant="ghost">Dashboard</Button>
             </Link>
             <Link href="/scholarships">
@@ -141,7 +142,7 @@ export default function AssistantPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3 mb-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="w-12 h-12 rounded-xl bg-linear-to-br from-amber-400 to-orange-500 flex items-center justify-center">
               <Sparkles className="h-6 w-6 text-white" />
             </div>
@@ -151,7 +152,7 @@ export default function AssistantPage() {
               </h1>
             </div>
           </div>
-          <p className="text-muted-foreground max-w-2xl">
+          <p className="text-muted-foreground max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
             Get AI-powered help with writing essays, preparing for interviews,
             and crafting compelling applications that stand out.
           </p>
@@ -159,7 +160,7 @@ export default function AssistantPage() {
 
         {/* Feature Cards */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
+          <Card className="bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800 hover-lift animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
             <CardContent className="p-6">
               <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400 mb-4" />
               <h3 className="font-semibold text-lg mb-2">Essay Writing</h3>
@@ -169,7 +170,7 @@ export default function AssistantPage() {
               </p>
             </CardContent>
           </Card>
-          <Card className="bg-linear-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 border-purple-200 dark:border-purple-800">
+          <Card className="bg-linear-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 border-purple-200 dark:border-purple-800 hover-lift animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
             <CardContent className="p-6">
               <MessageSquare className="h-8 w-8 text-purple-600 dark:text-purple-400 mb-4" />
               <h3 className="font-semibold text-lg mb-2">Interview Prep</h3>
@@ -179,7 +180,7 @@ export default function AssistantPage() {
               </p>
             </CardContent>
           </Card>
-          <Card className="bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-200 dark:border-green-800">
+          <Card className="bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-green-200 dark:border-green-800 hover-lift animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
             <CardContent className="p-6">
               <Lightbulb className="h-8 w-8 text-green-600 dark:text-green-400 mb-4" />
               <h3 className="font-semibold text-lg mb-2">Smart Refinement</h3>
@@ -209,19 +210,21 @@ export default function AssistantPage() {
               onValueChange={setActiveTab}
               className="space-y-6"
             >
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="essay" className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Essay Generator
-                </TabsTrigger>
-                <TabsTrigger
-                  value="interview"
-                  className="flex items-center gap-2"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  Interview Prep
-                </TabsTrigger>
-              </TabsList>
+              <div className="sticky top-0 bg-card z-10 pt-2 pb-4 -mt-2 -mx-6 px-6 border-b border-border">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="essay" className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Essay Generator
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="interview"
+                    className="flex items-center gap-2"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Interview Prep
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
               <div className="space-y-4">
                 <div>
@@ -245,7 +248,7 @@ export default function AssistantPage() {
                         </SelectItem>
                       ))}
                       {scholarships?.map((s) => (
-                        <SelectItem key={s.uid} value={s.uid}>
+                        <SelectItem key={s.uid} value={s.uid || ""}>
                           {s.title}
                         </SelectItem>
                       ))}
@@ -313,7 +316,7 @@ export default function AssistantPage() {
                     </Button>
                   </>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold text-lg">Generated Essay</h3>
                       <div className="flex gap-2">
@@ -346,10 +349,8 @@ export default function AssistantPage() {
                     </div>
 
                     <ScrollArea className="h-100 rounded-lg border p-4">
-                      <div className="prose dark:prose-invert max-w-none">
-                        <div className="whitespace-pre-wrap">
-                          {generatedEssay}
-                        </div>
+                      <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-semibold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-base prose-li:my-1 prose-strong:text-foreground prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic">
+                        <ReactMarkdown>{generatedEssay}</ReactMarkdown>
                       </div>
                     </ScrollArea>
 
@@ -426,7 +427,7 @@ export default function AssistantPage() {
                     </Button>
                   </>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold text-lg">
                         Practice Questions
@@ -502,10 +503,8 @@ export default function AssistantPage() {
                           </Button>
                         ) : (
                           <ScrollArea className="h-75 rounded-lg border p-4">
-                            <div className="prose dark:prose-invert max-w-none">
-                              <div className="whitespace-pre-wrap">
-                                {interviewAnswer}
-                              </div>
+                            <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-semibold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-base prose-li:my-1 prose-strong:text-foreground prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic">
+                              <ReactMarkdown>{interviewAnswer}</ReactMarkdown>
                             </div>
                           </ScrollArea>
                         )}

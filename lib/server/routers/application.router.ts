@@ -1,7 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, router } from "@/lib/trpc/server";
-import { getScholarship, getAllScholarships } from "@/lib/repositories/scholarships.repo";
+import { now } from "@/lib/utils/dates";
+import {
+  getScholarship,
+  getAllScholarships,
+} from "@/lib/repositories/scholarships.repo";
 import {
   createApplicationInScholarship,
   getApplicationById,
@@ -25,7 +29,11 @@ const getApplicationWithScholarship = async (applicationId: string) => {
       message: "Scholarship not found",
     });
   }
-  return { application: result.application, scholarship, scholarshipId: result.scholarshipId };
+  return {
+    application: result.application,
+    scholarship,
+    scholarshipId: result.scholarshipId,
+  };
 };
 import { generateText } from "@/lib/ai";
 
@@ -149,12 +157,14 @@ export const applicationRouter = router({
             passed: false,
             reviewerNotes: null,
             aiUsed: false,
+            aiHistory: [],
           },
           group: {
             checked: false,
             passed: false,
             reviewerNotes: null,
             aiPreparationUsed: false,
+            aiHistory: [],
           },
           interview: {
             status: "pending" as const,
@@ -162,6 +172,7 @@ export const applicationRouter = router({
             passed: false,
             reviewerNotes: null,
             aiPreparationGenerated: false,
+            aiHistory: [],
             interviewer: null,
             scheduledAt: null,
             reflectionNotes: null,
@@ -202,7 +213,10 @@ export const applicationRouter = router({
         application = result.application;
         scholarshipId = result.scholarshipId;
       } else {
-        application = await getApplicationById(scholarshipId, input.applicationId);
+        application = await getApplicationById(
+          scholarshipId,
+          input.applicationId,
+        );
         if (!application) {
           throw new TRPCError({
             code: "NOT_FOUND",
@@ -495,10 +509,11 @@ export const applicationRouter = router({
     .input(
       z.object({
         scholarshipId: z.string(),
-        currentDraft: z.string().optional(),
+        currentDraft: z.string(),
+        applicationId: z.string().optional(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const scholarship = await getScholarship(input.scholarshipId);
 
       if (!scholarship) {
@@ -564,6 +579,49 @@ Keep it under 120 words. Do not rewrite the draft.`;
         systemInstruction,
         model: "gemini-2.5-flash-lite",
       });
+
+      if (input.applicationId) {
+        const application = await getApplicationById(
+          input.scholarshipId,
+          input.applicationId,
+        );
+
+        if (!application) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Application not found",
+          });
+        }
+
+        if (application.userId !== ctx.user.uid) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Not authorized to update this application",
+          });
+        }
+
+        await updateApplicationById(input.scholarshipId, input.applicationId, {
+          stages: {
+            ...application.stages,
+            essay: {
+              ...application.stages.essay,
+              aiUsed: true,
+              aiHistory: [
+                ...(application.stages.essay.aiHistory ?? []),
+                {
+                  id: crypto.randomUUID(),
+                  type: "essay",
+                  title: input.currentDraft.trim()
+                    ? "Draft feedback"
+                    : "Essay suggestions",
+                  response: result,
+                  createdAt: now(),
+                },
+              ],
+            },
+          },
+        });
+      }
 
       return { assistance: result };
     }),
@@ -655,9 +713,10 @@ Keep it under 120 words. Do not rewrite the draft.`;
       z.object({
         scholarshipId: z.string(),
         assistanceType: z.enum(["breakdown", "slides", "strategy"]),
+        applicationId: z.string().optional(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const scholarship = await getScholarship(input.scholarshipId);
 
       if (!scholarship) {
@@ -774,6 +833,53 @@ Provide competitive positioning suggestions that align with the sponsoring organ
         model: "gemini-2.5-flash-lite",
       });
 
+      if (input.applicationId) {
+        const application = await getApplicationById(
+          input.scholarshipId,
+          input.applicationId,
+        );
+
+        if (!application) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Application not found",
+          });
+        }
+
+        if (application.userId !== ctx.user.uid) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Not authorized to update this application",
+          });
+        }
+
+        const titleMap: Record<typeof input.assistanceType, string> = {
+          breakdown: "Problem breakdown",
+          slides: "Slide outline",
+          strategy: "Winning strategy",
+        };
+
+        await updateApplicationById(input.scholarshipId, input.applicationId, {
+          stages: {
+            ...application.stages,
+            group: {
+              ...application.stages.group,
+              aiPreparationUsed: true,
+              aiHistory: [
+                ...(application.stages.group.aiHistory ?? []),
+                {
+                  id: crypto.randomUUID(),
+                  type: input.assistanceType,
+                  title: titleMap[input.assistanceType],
+                  response: result,
+                  createdAt: now(),
+                },
+              ],
+            },
+          },
+        });
+      }
+
       return { assistance: result };
     }),
 
@@ -863,10 +969,17 @@ Provide competitive positioning suggestions that align with the sponsoring organ
     .input(
       z.object({
         scholarshipId: z.string(),
-        assistanceType: z.enum(["profile", "organization", "questions", "strategy", "checklist"]),
+        assistanceType: z.enum([
+          "profile",
+          "organization",
+          "questions",
+          "strategy",
+          "checklist",
+        ]),
+        applicationId: z.string().optional(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const scholarship = await getScholarship(input.scholarshipId);
 
       if (!scholarship) {
@@ -1025,13 +1138,63 @@ Keep output as a practical, actionable checklist.`;
         model: "gemini-2.5-flash-lite",
       });
 
+      if (input.applicationId) {
+        const application = await getApplicationById(
+          input.scholarshipId,
+          input.applicationId,
+        );
+
+        if (!application) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Application not found",
+          });
+        }
+
+        if (application.userId !== ctx.user.uid) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Not authorized to update this application",
+          });
+        }
+
+        const titleMap: Record<typeof input.assistanceType, string> = {
+          profile: "Interviewer profile",
+          organization: "Organization briefing",
+          questions: "Predicted questions",
+          strategy: "Difficult questions",
+          checklist: "24-hour checklist",
+        };
+
+        await updateApplicationById(input.scholarshipId, input.applicationId, {
+          stages: {
+            ...application.stages,
+            interview: {
+              ...application.stages.interview,
+              aiPreparationGenerated: true,
+              aiHistory: [
+                ...(application.stages.interview.aiHistory ?? []),
+                {
+                  id: crypto.randomUUID(),
+                  type: input.assistanceType,
+                  title: titleMap[input.assistanceType],
+                  response: result,
+                  createdAt: now(),
+                },
+              ],
+            },
+          },
+        });
+      }
+
       return { assistance: result };
     }),
 
   getEssayStageById: protectedProcedure
     .input(z.object({ applicationId: z.string() }))
     .query(async ({ input }) => {
-      const { application, scholarship, scholarshipId } = await getApplicationWithScholarship(input.applicationId);
+      const { application, scholarship, scholarshipId } =
+        await getApplicationWithScholarship(input.applicationId);
 
       if (application.currentStage !== "essay") {
         throw new TRPCError({
@@ -1046,7 +1209,8 @@ Keep output as a practical, actionable checklist.`;
   getGroupStageById: protectedProcedure
     .input(z.object({ applicationId: z.string() }))
     .query(async ({ input }) => {
-      const { application, scholarship, scholarshipId } = await getApplicationWithScholarship(input.applicationId);
+      const { application, scholarship, scholarshipId } =
+        await getApplicationWithScholarship(input.applicationId);
 
       if (application.currentStage !== "group") {
         throw new TRPCError({
@@ -1061,7 +1225,8 @@ Keep output as a practical, actionable checklist.`;
   getInterviewStageById: protectedProcedure
     .input(z.object({ applicationId: z.string() }))
     .query(async ({ input }) => {
-      const { application, scholarship, scholarshipId } = await getApplicationWithScholarship(input.applicationId);
+      const { application, scholarship, scholarshipId } =
+        await getApplicationWithScholarship(input.applicationId);
 
       if (application.currentStage !== "interview") {
         throw new TRPCError({

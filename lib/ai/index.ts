@@ -109,44 +109,59 @@ export async function extractText<T>({
     apiKey: process.env.GEMINI_API_KEY!,
   });
 
-  const blob = new Blob([buffer], { type: file.type });
+  const isImage = file.type.startsWith("image/");
+  const isPdf = file.type === "application/pdf";
 
-  const uploaded = await ai.files.upload({
-    file: blob,
-    config: {
-      mimeType: file.type,
-      displayName: file.name,
-    },
-  });
-
-  if (!uploaded.uri || !uploaded.mimeType) {
-    throw new Error("Gemini file upload failed");
+  if (!isImage && !isPdf) {
+    throw new Error(`Unsupported file type: ${file.type}. Please upload a PDF or image file.`);
   }
 
-  const result = await ai.models.generateContent({
-    model: "gemini-2.5-flash-lite",
+  try {
+    const blob = new Blob([buffer], { type: file.type });
 
-    contents: [
-      {
-        role: "user",
-        parts: [
-          {
-            fileData: { fileUri: uploaded.uri, mimeType: uploaded.mimeType },
-          },
-          { text: extractGradesPrompt },
-        ],
+    const uploaded = await ai.files.upload({
+      file: blob,
+      config: {
+        mimeType: file.type,
+        displayName: file.name,
       },
-    ],
-    config: {
-      responseMimeType: "application/json",
-      responseJsonSchema: z.toJSONSchema(schema),
-    },
-  });
-  const rawText = result.text;
-  if (!rawText) {
-    throw new Error("No response text from Gemini");
-  }
+    });
 
-  const parsed = schema.parse(JSON.parse(rawText));
-  return parsed;
+    if (!uploaded.uri || !uploaded.mimeType) {
+      throw new Error("Gemini file upload failed");
+    }
+
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash-lite",
+
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              fileData: { fileUri: uploaded.uri, mimeType: uploaded.mimeType },
+            },
+            { text: extractGradesPrompt },
+          ],
+        },
+      ],
+      config: {
+        responseMimeType: "application/json",
+        responseJsonSchema: z.toJSONSchema(schema),
+      },
+    });
+    const rawText = result.text;
+    if (!rawText) {
+      throw new Error("No response text from Gemini");
+    }
+
+    const parsed = schema.parse(JSON.parse(rawText));
+    return parsed;
+  } catch (error) {
+    const err = error as Error;
+    if (err.message?.includes("image") || err.message?.includes("vision")) {
+      throw new Error("This file format is not supported for AI analysis. Please try uploading a PDF instead.");
+    }
+    throw error;
+  }
 }

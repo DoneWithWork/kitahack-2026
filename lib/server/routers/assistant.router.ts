@@ -15,7 +15,7 @@ export const assistantRouter = router({
       z.object({
         scholarshipId: z.string(),
         prompt: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const user = await getUser(ctx.user!.uid);
@@ -24,7 +24,6 @@ export const assistantRouter = router({
       if (!user || !scholarship) {
         throw new Error("User or scholarship not found");
       }
-
       const essay = await generateEssayDraft(user, scholarship, input.prompt);
       return { success: true, essay };
     }),
@@ -34,7 +33,7 @@ export const assistantRouter = router({
       z.object({
         currentEssay: z.string(),
         feedback: z.string(),
-      })
+      }),
     )
     .mutation(async ({ input }) => {
       const refined = await refineEssay(input.currentEssay, input.feedback);
@@ -58,7 +57,7 @@ export const assistantRouter = router({
     .input(
       z.object({
         question: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const user = await getUser(ctx.user!.uid);

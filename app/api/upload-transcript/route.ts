@@ -54,7 +54,8 @@ export async function POST(req: NextRequest) {
 
     const doc = await adminDb()
       .collection("transcripts")
-      .add({
+      .doc(userId)
+      .set({
         userId,
         ...parsed,
         uploadedAt: new Date(),
@@ -67,10 +68,26 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({
       success: true,
-      transcriptId: doc.id,
+      transcriptId: userId,
     });
   } catch (error) {
     console.error("Upload error:", error);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    const err = error as Error;
+    if (
+      err.message?.includes("not supported") ||
+      err.message?.includes("image")
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Unable to process this file format. Please try uploading a PDF instead.",
+        },
+        { status: 400 },
+      );
+    }
+    return NextResponse.json(
+      { error: "Upload failed. Please try again." },
+      { status: 500 },
+    );
   }
 }

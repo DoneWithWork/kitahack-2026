@@ -4,6 +4,35 @@ import { logger } from "@/lib/utils/logger";
 
 const DOCUMENTS_COLLECTION = "documents";
 
+function convertTimestamp(value: unknown): string {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "object" && value !== null) {
+    const obj = value as Record<string, unknown>;
+    if ("toDate" in obj && typeof obj.toDate === "function") {
+      return (obj.toDate() as Date).toISOString();
+    }
+    if ("_seconds" in obj && "_nanoseconds" in obj) {
+      const seconds = obj._seconds as number;
+      return new Date(seconds * 1000).toISOString();
+    }
+  }
+  return String(value);
+}
+
+function sanitizeDocumentData(data: Record<string, unknown>): Document {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (key === "uploadedAt" || key === "createdAt" || key === "updatedAt") {
+      result[key] = convertTimestamp(value);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result as Document;
+}
+
 export const createDocument = async (document: Document): Promise<void> => {
   try {
     await adminDb()
@@ -20,7 +49,7 @@ export const getDocument = async (id: string): Promise<Document | null> => {
   try {
     const doc = await adminDb().collection(DOCUMENTS_COLLECTION).doc(id).get();
     if (!doc.exists) return null;
-    return doc.data() as Document;
+    return sanitizeDocumentData(doc.data() as Record<string, unknown>);
   } catch (error) {
     logger.error({ error, id }, "Error getting document");
     throw error;
@@ -34,7 +63,7 @@ export const getDocumentsByUser = async (uid: string): Promise<Document[]> => {
       .where("uid", "==", uid)
       .orderBy("uploadedAt", "desc")
       .get();
-    return snapshot.docs.map((doc) => doc.data() as Document);
+    return snapshot.docs.map((doc) => sanitizeDocumentData(doc.data() as Record<string, unknown>));
   } catch (error) {
     logger.error({ error, uid }, "Error getting user documents");
     throw error;
@@ -48,10 +77,12 @@ export const getDocumentsByType = async (
   try {
     const snapshot = await adminDb()
       .collection(type)
-      .where("uid", "==", uid)
+      .where("userId", "==", uid)
       .orderBy("uploadedAt", "desc")
       .get();
-    return snapshot.docs.map((doc) => doc.data() as Document);
+    return snapshot.docs.map((doc) =>
+      sanitizeDocumentData({ id: doc.id, ...doc.data() as Record<string, unknown> }),
+    );
   } catch (error) {
     logger.error({ error, uid, type }, "Error getting documents by type");
     throw error;

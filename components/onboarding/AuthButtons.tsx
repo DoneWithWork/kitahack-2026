@@ -7,7 +7,7 @@ const AuthButtons = () => {
   return (
     <>
       {auth.currentUser ? (
-        <Link href="/dashboard">
+        <Link href="/dashboard/scholarships">
           <Button
             variant="outline"
             className="text-muted-foreground hover:text-primary"

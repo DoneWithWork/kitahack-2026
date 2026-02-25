@@ -33,6 +33,8 @@ export default function AdminDashboardPage() {
 
   const [notes, setNotes] = useState("");
   const [approvingAction, setApprovingAction] = useState<"approve" | "reject" | null>(null);
+  const [wasAdmin, setWasAdmin] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
 
   const { data: roleData } = trpc.admin.getUserRole.useQuery(undefined, {
     enabled: !!applicationId,
@@ -55,10 +57,13 @@ export default function AdminDashboardPage() {
   });
 
   useEffect(() => {
-    if (roleData && roleData.role !== "admin_simulated") {
-      router.push("/dashboard");
+    if (roleData?.role === "admin_simulated") {
+      setWasAdmin(true);
+      setIsExiting(false);
+    } else if (wasAdmin) {
+      setIsExiting(true);
     }
-  }, [roleData, router]);
+  }, [roleData?.role, wasAdmin]);
 
   if (!applicationId) {
     return (
@@ -67,7 +72,10 @@ export default function AdminDashboardPage() {
           <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
           <p className="text-lg font-medium">No Application Selected</p>
           <p className="text-muted-foreground">Please select an application from a stage page.</p>
-          <Button className="mt-4" onClick={() => router.push("/dashboard")}>
+          <Button
+            className="mt-4"
+            onClick={() => router.push("/dashboard/scholarships")}
+          >
             Go to Dashboard
           </Button>
         </div>
@@ -76,13 +84,27 @@ export default function AdminDashboardPage() {
   }
 
   if (roleData?.role !== "admin_simulated") {
+    if (wasAdmin) {
+      return (
+        <div
+          className={`flex items-center justify-center min-h-[400px] transition-opacity duration-200 ${
+            isExiting ? "opacity-0" : "opacity-100"
+          }`}
+        >
+          <p className="text-sm text-muted-foreground">Returning to user view...</p>
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
           <p className="text-lg font-medium">Admin Mode Not Enabled</p>
           <p className="text-muted-foreground">Please enable admin mode from a stage page.</p>
-          <Button className="mt-4" onClick={() => router.push("/dashboard")}>
+          <Button
+            className="mt-4"
+            onClick={() => router.push("/dashboard/scholarships")}
+          >
             Go to Dashboard
           </Button>
         </div>
