@@ -65,7 +65,7 @@ export default function AuthPage() {
               <GraduationCap className="h-7 w-7 text-white" />
             </div>
             <span className="text-2xl font-bold text-slate-900 dark:text-white">
-              ScholarGuide
+              MyDANA
             </span>
           </div>
 
@@ -104,13 +104,13 @@ export default function AuthPage() {
                   <GraduationCap className="h-6 w-6 text-white" />
                 </div>
                 <span className="text-xl font-bold text-slate-900 dark:text-white">
-                  ScholarGuide
+                  MyDANA
                 </span>
               </div>
               <ModeToggle />
             </div>
             <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">
-              Welcome to ScholarGuide
+              Welcome to MyDANA
             </CardTitle>
             <CardDescription className="text-slate-500 dark:text-slate-400">
               Sign in with your Google account to start finding scholarships

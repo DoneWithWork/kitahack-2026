@@ -31,9 +31,7 @@ export default function LandingPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-blue-500">
               <GraduationCap className="h-6 w-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-foreground">
-              ScholarGuide
-            </span>
+            <span className="text-xl font-bold text-foreground">MyDANA</span>
           </div>
 
           <nav className="hidden md:flex items-center gap-8">
@@ -908,9 +906,7 @@ export default function LandingPage() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-blue-500">
                   <GraduationCap className="h-6 w-6 text-white" />
                 </div>
-                <span className="text-xl font-bold text-white">
-                  ScholarGuide
-                </span>
+                <span className="text-xl font-bold text-white">MyDANA</span>
               </div>
               <p className="text-sm text-slate-400">
                 Empowering Malaysian students to discover and secure educational
@@ -1002,7 +998,7 @@ export default function LandingPage() {
 
           <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-slate-500">
-              © 2026 ScholarGuide. All rights reserved.
+              © 2026 MyDANA. All rights reserved.
             </p>
             <div className="flex gap-6">
               <Link

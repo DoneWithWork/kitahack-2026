@@ -15,10 +15,11 @@ export function WelcomeStep({ onNext }: { onNext: () => void }) {
           <Sparkles className="h-10 w-10 text-blue-600 dark:text-blue-400" />
         </div>
         <CardTitle className="text-3xl font-bold text-slate-900 dark:text-white">
-          Welcome to ScholarGuide!
+          Welcome to MyDANA!
         </CardTitle>
         <CardDescription className="text-lg text-slate-600 dark:text-slate-300">
-          Let&apos;s set up your profile to find the perfect scholarships for you
+          Let&apos;s set up your profile to find the perfect scholarships for
+          you
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

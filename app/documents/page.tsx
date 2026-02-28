@@ -367,7 +367,7 @@ export default function DocumentsPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-500">
               <GraduationCap className="h-6 w-6 text-white" />
             </div>
-            <span className="text-xl font-bold">ScholarGuide</span>
+            <span className="text-xl font-bold">MyDANA</span>
           </div>
           <nav className="flex gap-4">
             <Link href="/dashboard/scholarships">

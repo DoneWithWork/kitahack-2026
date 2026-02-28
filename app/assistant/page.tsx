@@ -118,7 +118,7 @@ export default function AssistantPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-brrom-blue-600 to-blue-500">
               <GraduationCap className="h-6 w-6 text-white" />
             </div>
-            <span className="text-xl font-bold">ScholarGuide</span>
+            <span className="text-xl font-bold">MyDANA</span>
           </div>
           <nav className="flex gap-4">
             <Link href="/dashboard/scholarships">
@@ -212,7 +212,10 @@ export default function AssistantPage() {
             >
               <div className="sticky top-0 bg-card z-10 pt-2 pb-4 -mt-2 -mx-6 px-6 border-b border-border">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="essay" className="flex items-center gap-2">
+                  <TabsTrigger
+                    value="essay"
+                    className="flex items-center gap-2"
+                  >
                     <FileText className="h-4 w-4" />
                     Essay Generator
                   </TabsTrigger>

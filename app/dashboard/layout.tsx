@@ -53,18 +53,14 @@ function SidebarContent({
             <GraduationCap className="h-6 w-6 text-white" />
           </div>
           {!compact && (
-            <span className="text-xl font-bold text-foreground">
-              ScholarGuide
-            </span>
+            <span className="text-xl font-bold text-foreground">MyDANA</span>
           )}
         </Link>
       </div>
 
       {/* Menu */}
       <ScrollArea className={`flex-1 ${compact ? "px-2" : "px-4"}`}>
-        <nav
-          className={`flex flex-col ${compact ? "items-center gap-2" : ""}`}
-        >
+        <nav className={`flex flex-col ${compact ? "items-center gap-2" : ""}`}>
           {sidebarItems.map((item) => {
             const isActive = pathname === item.href;
 

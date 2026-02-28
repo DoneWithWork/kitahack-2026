@@ -96,7 +96,9 @@ export default function OnboardingPage() {
         );
       case 4:
         return (
-          <CompleteStep onComplete={() => router.push("/dashboard/scholarships")} />
+          <CompleteStep
+            onComplete={() => router.push("/dashboard/scholarships")}
+          />
         );
       default:
         return <WelcomeStep onNext={() => setCurrentStep(1)} />;
@@ -113,7 +115,7 @@ export default function OnboardingPage() {
                 <GraduationCap className="h-6 w-6 text-white" />
               </div>
               <span className="text-xl font-bold text-slate-900 dark:text-white">
-                ScholarGuide
+                MyDANA
               </span>
             </div>
             <span className="text-sm text-slate-500 dark:text-slate-400">
