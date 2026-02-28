@@ -25,8 +25,8 @@ export const documentRouter = router({
     .input(
       z.object({
         type: z.enum([
-          "transcripts",
-          "certificates",
+          "transcript",
+          "certificate",
           "recommendation_letter",
           "essay",
           "other",

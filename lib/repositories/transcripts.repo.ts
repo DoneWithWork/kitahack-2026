@@ -53,7 +53,7 @@ export const getTranscript = async (
   try {
     const doc = await adminDb()
       .collection(TRANSCRIPTS_COLLECTION)
-      .doc("yLDz112f449pyq215ttw")
+      .doc(uid)
       .get();
     if (!doc.exists) return null;
     return sanitizeTranscriptData(doc.data() as Record<string, unknown>);

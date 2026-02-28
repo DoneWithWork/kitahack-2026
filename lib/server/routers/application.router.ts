@@ -35,9 +35,45 @@ const getApplicationWithScholarship = async (applicationId: string) => {
     scholarshipId: result.scholarshipId,
   };
 };
+import { getUserApplicationsAll } from "@/lib/repositories/application.repo";
 import { generateText } from "@/lib/ai";
 
 export const applicationRouter = router({
+  /**
+   * Combined endpoint for the applications landing page.
+   * Fetches scholarships + user applications in parallel (using
+   * collectionGroup) instead of two separate queries where
+   * getUserApplications had an N+1 sequential loop.
+   */
+  getPageData: protectedProcedure.query(async ({ ctx }) => {
+    const [scholarships, userApps] = await Promise.all([
+      getAllScholarships(),
+      getUserApplicationsAll(ctx.user.uid),
+    ]);
+
+    const scholarshipMap: Record<
+      string,
+      { title: string; provider?: string; deadline?: string }
+    > = {};
+    for (const s of scholarships) {
+      if (!s.uid) continue;
+      scholarshipMap[s.uid] = {
+        title: s.title,
+        provider: s.provider,
+        deadline: s.deadline,
+      };
+    }
+
+    const applications = userApps.map((a) => ({
+      scholarshipId: a.scholarshipId,
+      applicationId: a.applicationId,
+      status: a.application.status,
+      currentStage: a.application.currentStage,
+    }));
+
+    return { scholarshipMap, applications };
+  }),
+
   checkApplicationStatus: protectedProcedure
     .input(z.object({ scholarshipId: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -105,10 +141,16 @@ export const applicationRouter = router({
       }
 
       const now = new Date();
-      const openingDate = new Date(scholarship.openingDate);
-      const closingDate = new Date(scholarship.closingDate);
+      const openingDate = scholarship.openingDate ? new Date(scholarship.openingDate) : null;
+      const closingDate = scholarship.closingDate ? new Date(scholarship.closingDate) : null;
 
-      if (now < openingDate || now > closingDate) {
+      // Extend closingDate to end of day (23:59:59.999) so scholarships
+      // due "today" remain open for the entire closing day
+      if (closingDate) {
+        closingDate.setHours(23, 59, 59, 999);
+      }
+
+      if (openingDate && closingDate && (now < openingDate || now > closingDate)) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Scholarship is not currently accepting applications",
@@ -534,7 +576,7 @@ Scholarship Description:
 ${scholarship.description}
 
 Benefits:
-${scholarship.benefits.map((b) => `- ${b}`).join("\n")}
+${(scholarship.benefits ?? []).map((b) => `- ${b}`).join("\n")}
 
 Essay Question:
 ${scholarship.essayQuestion}
@@ -557,7 +599,7 @@ Scholarship Description:
 ${scholarship.description}
 
 Benefits:
-${scholarship.benefits.map((b) => `- ${b}`).join("\n")}
+${(scholarship.benefits ?? []).map((b) => `- ${b}`).join("\n")}
 
 Essay Question:
 ${scholarship.essayQuestion}
@@ -1003,7 +1045,7 @@ Scholarship Description:
 ${scholarship.description}
 
 Interview Focus Areas:
-${scholarship.interviewFocusAreas.map((f) => `- ${f}`).join("\n")}
+${(scholarship.interviewFocusAreas ?? []).map((f) => `- ${f}`).join("\n")}
 
 Organization Website:
 ${scholarship.sourceUrl}
@@ -1046,7 +1088,7 @@ Scholarship Title:
 ${scholarship.title}
 
 Interview Focus Areas:
-${scholarship.interviewFocusAreas.map((f) => `- ${f}`).join("\n")}
+${(scholarship.interviewFocusAreas ?? []).map((f) => `- ${f}`).join("\n")}
 
 Organization Website:
 ${scholarship.sourceUrl}
@@ -1077,7 +1119,7 @@ Scholarship Description:
 ${scholarship.description}
 
 Interview Focus Areas:
-${scholarship.interviewFocusAreas.map((f) => `- ${f}`).join("\n")}
+${(scholarship.interviewFocusAreas ?? []).map((f) => `- ${f}`).join("\n")}
 
 Generate 5 difficult interview questions with structured answer hints:
 1. Behavioral question with STAR method hints
@@ -1107,7 +1149,7 @@ Scholarship Title:
 ${scholarship.title}
 
 Interview Focus Areas:
-${scholarship.interviewFocusAreas.map((f) => `- ${f}`).join("\n")}
+${(scholarship.interviewFocusAreas ?? []).map((f) => `- ${f}`).join("\n")}
 
 Generate a final 24-hour preparation checklist:
 

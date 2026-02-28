@@ -6,12 +6,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   ArrowRight,
   Award,
-  BookOpen,
   CheckCircle2,
+  Clock,
+  Eye,
+  FileText,
   GraduationCap,
+  Lightbulb,
+  MessageSquare,
+  Rocket,
+  Shield,
   Sparkles,
   Target,
-  Users,
+  TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -32,22 +38,40 @@ export default function LandingPage() {
 
           <nav className="hidden md:flex items-center gap-8">
             <Link
+              href="#problem"
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            >
+              Problem
+            </Link>
+            <Link
+              href="#sdg"
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            >
+              SDG Alignment
+            </Link>
+            <Link
+              href="#feedback"
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            >
+              Feedback
+            </Link>
+            <Link
+              href="#metrics"
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            >
+              Impact
+            </Link>
+            <Link
               href="#features"
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
             >
               Features
             </Link>
             <Link
-              href="#how-it-works"
+              href="#roadmap"
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
             >
-              How It Works
-            </Link>
-            <Link
-              href="#benefits"
-              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-            >
-              Benefits
+              Roadmap
             </Link>
           </nav>
 
@@ -80,10 +104,9 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-lg lg:text-xl text-muted-foreground max-w-xl leading-relaxed">
-                In Malaysia, RM32 billion in PTPTN loans remain unpaid, while
-                thousands of scholarships go unclaimed annually. Our AI-powered
-                platform helps Malaysian students find and secure their rightful
-                funding opportunities.
+                Track multiple scholarship applications in one place. Our AI
+                helps you find eligible opportunities, simplifies requirements,
+                and guides your essays authentically.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -149,7 +172,7 @@ export default function LandingPage() {
                       <div className="flex items-center gap-3 p-3 rounded-xl bg-muted">
                         <CheckCircle2 className="w-5 h-5 text-green-500" />
                         <span className="text-sm text-foreground">
-                          Stanford Merit Scholarship
+                          Maxis Talent Scholarship
                         </span>
                         <Badge className="ml-auto bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">
                           Eligible
@@ -158,7 +181,7 @@ export default function LandingPage() {
                       <div className="flex items-center gap-3 p-3 rounded-xl bg-muted">
                         <CheckCircle2 className="w-5 h-5 text-green-500" />
                         <span className="text-sm text-foreground">
-                          Gates Millennium Scholarship
+                          Petronas Education Award
                         </span>
                         <Badge className="ml-auto bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">
                           Eligible
@@ -167,7 +190,7 @@ export default function LandingPage() {
                       <div className="flex items-center gap-3 p-3 rounded-xl bg-muted">
                         <Target className="w-5 h-5 text-blue-500" />
                         <span className="text-sm text-foreground">
-                          Fulbright Program
+                          YTL Foundation Scholarship
                         </span>
                         <Badge className="ml-auto bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
                           High Match
@@ -199,31 +222,430 @@ export default function LandingPage() {
         </div>
       </section>
 
-        {/* Stats Section */}
-        <section className="py-16 bg-muted">
-          <div className="container mx-auto px-4 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {[
-                { value: "RM71B+", label: "PTPTN Disbursed" },
-                { value: "3.9M+", label: "Students Funded" },
-                { value: "7,000+", label: "B40 Get Free Education" },
-                { value: "20+", label: "Public Universities" },
-              ].map((stat, i) => (
-              <div key={i} className="text-center">
-                <p className="text-3xl lg:text-4xl font-bold text-primary">
-                  {stat.value}
+      {/* Problem Statement */}
+      <section id="problem" className="py-20 bg-background">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-center max-w-4xl mx-auto mb-16">
+            <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-0 px-4 py-1.5 text-sm font-medium mb-4">
+              Problem Statement
+            </Badge>
+            <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">
+              The Scholarship Gap: Why SPM Students Miss Opportunities
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              SPM school leavers face a fragmented scholarship ecosystem—
+              scattered information, complex requirements, and no centralized
+              way to manage multiple applications.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                icon: Eye,
+                title: "Hidden Opportunities",
+                description:
+                  "Scholarships are published on individual websites with limited outreach, leaving many opportunities undiscovered.",
+                stat: "67%",
+                statLabel: "say finding info is top priority",
+              },
+              {
+                icon: FileText,
+                title: "Complex Requirements",
+                description:
+                  "Varying eligibility criteria, documentation needs, and submission processes create confusion.",
+                stat: "2+ hours",
+                statLabel: "average search time per scholarship",
+              },
+              {
+                icon: Clock,
+                title: "Missed Deadlines",
+                description:
+                  "Managing applications across different portals and emails leads to missed submissions.",
+                stat: "1 in 3",
+                statLabel: "students miss at least one deadline",
+              },
+              {
+                icon: MessageSquare,
+                title: "Essay Challenges",
+                description:
+                  "Limited guidance and weak writing skills lead to overreliance on detectable AI-generated content.",
+                stat: "73%",
+                statLabel: "of essays show AI detection flags",
+              },
+            ].map((item, i) => (
+              <Card
+                key={i}
+                className="border-border bg-card hover:border-red-200 dark:hover:border-red-800 transition-colors"
+              >
+                <CardContent className="p-6">
+                  <item.icon className="w-8 h-8 text-red-500 mb-4" />
+                  <h3 className="text-lg font-bold text-foreground mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {item.description}
+                  </p>
+                  <div className="pt-4 border-t border-border">
+                    <span className="text-2xl font-bold text-red-600">
+                      {item.stat}
+                    </span>
+                    <p className="text-xs text-muted-foreground">
+                      {item.statLabel}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SDG Alignment */}
+      <section id="sdg" className="py-20 bg-muted/50">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-center max-w-4xl mx-auto mb-16">
+            <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0 px-4 py-1.5 text-sm font-medium mb-4">
+              SDG Alignment
+            </Badge>
+            <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">
+              How We Address Real-World Problems with AI
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              Our solution directly supports three United Nations Sustainable
+              Development Goals through meaningful technology integration.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {[
+              {
+                sdg: "SDG 4",
+                title: "Quality Education",
+                description: "Equitable access to tertiary education",
+                color: "green",
+                badgeBg: "bg-green-100 dark:bg-green-900/30",
+                badgeText: "text-green-700 dark:text-green-400",
+                iconColor: "text-green-500",
+                sdgColor: "text-green-600 dark:text-green-400",
+                solutions: [
+                  {
+                    title: "AI Scholarship Matching",
+                    detail:
+                      "Recommends scholarships based on student profile, results, and income background—ensuring no qualified student misses funding due to lack of information.",
+                  },
+                  {
+                    title: "Essay Guidance",
+                    detail:
+                      "Provides structure suggestions and feedback to improve authentic writing instead of generic AI-generated content.",
+                  },
+                ],
+              },
+              {
+                sdg: "SDG 8",
+                title: "Decent Work & Economic Growth",
+                description: "Workforce development through education access",
+                color: "blue",
+                badgeBg: "bg-blue-100 dark:bg-blue-900/30",
+                badgeText: "text-blue-700 dark:text-blue-400",
+                iconColor: "text-blue-500",
+                sdgColor: "text-blue-600 dark:text-blue-400",
+                solutions: [
+                  {
+                    title: "Application Tracking",
+                    detail:
+                      "Centralized dashboard prevents missed deadlines, enabling more students to progress into higher education and careers.",
+                  },
+                  {
+                    title: "Eligibility Simplification",
+                    detail:
+                      "NLP translates complex criteria into simple checklists, reducing confusion for students without school guidance.",
+                  },
+                ],
+              },
+              {
+                sdg: "SDG 10",
+                title: "Reduced Inequalities",
+                description: "Fair access regardless of background",
+                color: "orange",
+                badgeBg: "bg-orange-100 dark:bg-orange-900/30",
+                badgeText: "text-orange-700 dark:text-orange-400",
+                iconColor: "text-orange-500",
+                sdgColor: "text-orange-600 dark:text-orange-400",
+                solutions: [
+                  {
+                    title: "Centralized Platform",
+                    detail:
+                      "Reduces structural disadvantages for B40, rural, and first-generation students who lack family guidance or school support.",
+                  },
+                  {
+                    title: "Privacy-First Architecture",
+                    detail:
+                      "Addresses data privacy concerns while providing equitable access to scholarship opportunities.",
+                  },
+                ],
+              },
+            ].map((item, i) => (
+              <Card key={i} className="border-border bg-card overflow-hidden">
+                <div
+                  className={`h-2 ${
+                    item.color === "green"
+                      ? "bg-green-500"
+                      : item.color === "blue"
+                      ? "bg-blue-500"
+                      : "bg-orange-500"
+                  }`}
+                />
+                <CardContent className="p-8">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className={`text-2xl font-bold ${item.sdgColor}`}>
+                      {item.sdg}
+                    </span>
+                    <Badge className={`${item.badgeBg} ${item.badgeText}`}>
+                      Target 4.A, 8.6, 10.2
+                    </Badge>
+                  </div>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-muted-foreground mb-6">
+                    {item.description}
+                  </p>
+                  <div className="space-y-4">
+                    {item.solutions.map((sol, j) => (
+                      <div key={j} className="flex gap-3">
+                        <CheckCircle2
+                          className={`w-5 h-5 ${item.iconColor} flex-shrink-0 mt-0.5`}
+                        />
+                        <div>
+                          <p className="font-semibold text-foreground text-sm">
+                            {sol.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {sol.detail}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* User Feedback & Iteration */}
+      <section id="feedback" className="py-20 bg-background">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-center max-w-4xl mx-auto mb-16">
+            <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-0 px-4 py-1.5 text-sm font-medium mb-4">
+              User Feedback & Iteration
+            </Badge>
+            <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">
+              Evolving Based on Real Student Needs
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              Through surveys and direct feedback, we discovered that students
+              needed more than just an aggregator—they needed intelligent
+              guidance.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8 mb-16">
+            <Card className="border-border bg-card">
+              <CardContent className="p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
+                    <Lightbulb className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    Initial Assumption
+                  </h3>
+                </div>
+                <p className="text-muted-foreground">
+                  We initially thought a scholarship aggregator website with
+                  basic management features would be sufficient. Students would
+                  find opportunities and track applications in one place.
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {stat.label}
-                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border bg-card">
+              <CardContent className="p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    User Feedback Insights
+                  </h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex gap-3">
+                    <Shield className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">
+                        Data Privacy Concerns
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Students worried about sensitive academic/financial data
+                        handling
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Sparkles className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">
+                        AI Essay Detection Anxiety
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Concern over &quot;GPT-written&quot; essays being
+                        flagged as inauthentic
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Target className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">
+                        Scenario-Based Preparation
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Request for company-specific interview questions (e.g.,
+                        Maxis)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="border-purple-200 dark:border-purple-800 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30">
+            <CardContent className="p-8">
+              <div className="flex items-center gap-3 mb-4">
+                <Rocket className="w-6 h-6 text-purple-600" />
+                <h3 className="text-xl font-bold text-foreground">
+                  Iteration Result: Scenario-Based AI Assistant
+                </h3>
               </div>
+              <p className="text-muted-foreground mb-4">
+                Based on user feedback, we introduced a foundational AI model
+                that:
+              </p>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-purple-100 dark:border-purple-800">
+                  <p className="font-semibold text-foreground text-sm mb-1">
+                    Pulls Company Data
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Integrates information about scholarship providers (e.g.,
+                    Maxis values, culture)
+                  </p>
+                </div>
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-purple-100 dark:border-purple-800">
+                  <p className="font-semibold text-foreground text-sm mb-1">
+                    Generates Practice Questions
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Creates scenario-based questions aligned with company values
+                  </p>
+                </div>
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-purple-100 dark:border-purple-800">
+                  <p className="font-semibold text-foreground text-sm mb-1">
+                    Provides Authentic Feedback
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Guides without generating—helping students find their own
+                    voice
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Success Metrics */}
+      <section id="metrics" className="py-20 bg-muted/50">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-center max-w-4xl mx-auto mb-16">
+            <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-0 px-4 py-1.5 text-sm font-medium mb-4">
+              Success Metrics
+            </Badge>
+            <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">
+              Measurable Impact Goals
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              We track specific metrics to ensure our solution delivers real
+              value to SPM students seeking scholarship opportunities.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                metric: "≥50%",
+                label: "Discovery Time Reduction",
+                description: "Average time to identify 5 eligible scholarships",
+                icon: TrendingUp,
+                color: "blue",
+              },
+              {
+                metric: "≥85%",
+                label: "Eligibility Match Precision",
+                description:
+                  "Recommended scholarships users confirm eligibility for",
+                icon: Target,
+                color: "green",
+              },
+              {
+                metric: "≥40%",
+                label: "Application Completion Rate",
+                description: "Improvement in completed vs started applications",
+                icon: CheckCircle2,
+                color: "purple",
+              },
+              {
+                metric: "≥80%",
+                label: "Essay Confidence Index",
+                description:
+                  "Users reporting improved authentic writing confidence",
+                icon: Sparkles,
+                color: "orange",
+              },
+            ].map((item, i) => (
+              <Card key={i} className="border-border bg-card text-center">
+                <CardContent className="p-6">
+                  <div
+                    className={`w-12 h-12 mx-auto rounded-full bg-${item.color}-100 dark:bg-${item.color}-900 flex items-center justify-center mb-4`}
+                  >
+                    <item.icon
+                      className={`w-6 h-6 text-${item.color}-600 dark:text-${item.color}-400`}
+                    />
+                  </div>
+                  <p
+                    className={`text-4xl font-bold text-${item.color}-600 mb-2`}
+                  >
+                    {item.metric}
+                  </p>
+                  <p className="font-semibold text-foreground mb-2">
+                    {item.label}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {item.description}
+                  </p>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 bg-background">
+      <section id="features" className="py-20 bg-background">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <Badge className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 mb-4">
@@ -248,13 +670,6 @@ export default function LandingPage() {
                 color: "blue",
               },
               {
-                icon: BookOpen,
-                title: "Smart Document Parser",
-                description:
-                  "Upload your transcripts and documents. Our AI extracts and organizes all relevant information automatically.",
-                color: "indigo",
-              },
-              {
                 icon: Target,
                 title: "Eligibility Checker",
                 description:
@@ -269,19 +684,26 @@ export default function LandingPage() {
                 color: "purple",
               },
               {
-                icon: Users,
+                icon: MessageSquare,
                 title: "Essay Assistant",
                 description:
                   "Get AI-powered help writing compelling scholarship essays that stand out from the competition.",
                 color: "fuchsia",
               },
-                {
-                  icon: CheckCircle2,
-                  title: "PTPTN & Government Aid",
-                  description:
-                    "Navigate Malaysia's scholarship landscape including PTPTN loans, B40 assistance, and merit-based awards.",
-                  color: "pink",
-                },
+              {
+                icon: Clock,
+                title: "Deadline Reminders",
+                description:
+                  "Never miss a deadline with smart notifications and calendar integration.",
+                color: "orange",
+              },
+              {
+                icon: Shield,
+                title: "Privacy First",
+                description:
+                  "Your data is protected with enterprise-grade security and anonymization.",
+                color: "green",
+              },
             ].map((feature, i) => (
               <Card key={i} className="group hover-lift border-border bg-card">
                 <CardContent className="p-6">
@@ -303,64 +725,144 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="py-24 bg-muted">
+      {/* Scalability Roadmap */}
+      <section id="roadmap" className="py-20 bg-muted/50">
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <Badge className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 mb-4">
-              How It Works
+          <div className="text-center max-w-4xl mx-auto mb-16">
+            <Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 border-0 px-4 py-1.5 text-sm font-medium mb-4">
+              Scalability Roadmap
             </Badge>
-            <h2 className="text-4xl font-bold text-foreground mb-4">
-              Four Simple Steps to Success
+            <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">
+              From Pilot to Regional Impact
             </h2>
-            <p className="text-lg text-muted-foreground">
-              Our streamlined process makes finding and applying for
-              scholarships easier than ever.
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              Our phased approach ensures sustainable growth while maintaining
+              quality and measurable impact.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              {
-                step: "01",
-                title: "Create Profile",
-                description:
-                  "Sign up and complete your profile with academic information and interests.",
-              },
-              {
-                step: "02",
-                title: "Upload Documents",
-                description:
-                  "Upload your transcripts and relevant documents for AI analysis.",
-              },
-              {
-                step: "03",
-                title: "Get Matched",
-                description:
-                  "Our AI finds and ranks scholarships based on your eligibility.",
-              },
-              {
-                step: "04",
-                title: "Apply & Win",
-                description:
-                  "Track applications, get essay help, and secure your scholarships.",
-              },
-            ].map((item, i) => (
-              <div key={i} className="relative">
-                <div className="text-6xl font-bold text-blue-100 dark:text-blue-900 mb-4">
-                  {item.step}
+          <div className="grid lg:grid-cols-3 gap-8">
+            <Card className="border-border bg-card">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <Badge className="bg-blue-100 text-blue-700">Phase 1</Badge>
+                  <span className="text-sm text-muted-foreground">
+                    0-6 months
+                  </span>
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">
-                  {item.title}
+                <h3 className="text-xl font-bold text-foreground mb-4">
+                  Pilot
                 </h3>
-                <p className="text-muted-foreground">{item.description}</p>
-                {i < 3 && (
-                  <div className="hidden lg:block absolute top-8 right-0 transform translate-x-1/2">
-                    <ArrowRight className="w-6 h-6 text-blue-300 dark:text-blue-700" />
-                  </div>
-                )}
-              </div>
-            ))}
+                <p className="text-muted-foreground mb-6">
+                  Focus: Malaysian SPM leavers with curated scholarship database
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Top 100-200 scholarships database</span>
+                  </li>
+                  <li className="flex gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>AI-powered eligibility filtering</span>
+                  </li>
+                  <li className="flex gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Scenario-based essay simulation</span>
+                  </li>
+                  <li className="flex gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Privacy-first architecture</span>
+                  </li>
+                </ul>
+                <div className="mt-6 pt-6 border-t border-border">
+                  <p className="text-sm font-semibold text-foreground">
+                    Goal: Prove metric improvements with real users
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/30">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <Badge className="bg-indigo-100 text-indigo-700">
+                    Phase 2
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    6-18 months
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold text-foreground mb-4">
+                  National Scale
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Technical & Partnership Scaling across Malaysia
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5" />
+                    <span>Automated scraping + verification</span>
+                  </li>
+                  <li className="flex gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5" />
+                    <span>Modular AI orchestration</span>
+                  </li>
+                  <li className="flex gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5" />
+                    <span>Cloud-native horizontal scaling</span>
+                  </li>
+                  <li className="flex gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5" />
+                    <span>Corporate partnerships</span>
+                  </li>
+                </ul>
+                <div className="mt-6 pt-6 border-t border-border">
+                  <p className="text-sm font-semibold text-foreground">
+                    Goal: 5,000+ users, ≥80% precision
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border bg-card">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <Badge className="bg-green-100 text-green-700">Phase 3</Badge>
+                  <span className="text-sm text-muted-foreground">
+                    18-36 months
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold text-foreground mb-4">
+                  Regional Expansion
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Beyond Malaysia to Southeast Asia
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Country-specific eligibility models</span>
+                  </li>
+                  <li className="flex gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Pre-university/foundation scholarships</span>
+                  </li>
+                  <li className="flex gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Multi-language AI support</span>
+                  </li>
+                  <li className="flex gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Regional scholarship infrastructure</span>
+                  </li>
+                </ul>
+                <div className="mt-6 pt-6 border-t border-border">
+                  <p className="text-sm font-semibold text-foreground">
+                    Goal: Platform as regional infrastructure
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
@@ -372,11 +874,11 @@ export default function LandingPage() {
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNGgyLTJ6IiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvZz48L3N2Zz4=')] opacity-20" />
             <div className="relative z-10 text-center max-w-3xl mx-auto">
               <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-                Ready to Find Your Perfect Scholarship?
+                Ready to Transform Scholarship Access?
               </h2>
               <p className="text-xl text-blue-100 mb-8">
-                Join thousands of students who have already discovered their
-                scholarship matches. Start your journey today.
+                Join us in bridging the gap between SPM students and scholarship
+                opportunities. Your journey to funded education starts here.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/auth">
@@ -390,7 +892,7 @@ export default function LandingPage() {
                 </Link>
               </div>
               <p className="mt-6 text-sm text-blue-200">
-                No credit card required • Free forever plan available
+                No credit card required • Privacy-first platform
               </p>
             </div>
           </div>
@@ -411,8 +913,8 @@ export default function LandingPage() {
                 </span>
               </div>
               <p className="text-sm text-slate-400">
-                Empowering students worldwide to discover and secure educational
-                funding opportunities.
+                Empowering Malaysian students to discover and secure educational
+                funding opportunities through AI-powered guidance.
               </p>
             </div>
 
@@ -421,7 +923,7 @@ export default function LandingPage() {
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link
-                    href="#"
+                    href="#features"
                     className="text-slate-400 hover:text-white transition-colors"
                   >
                     Features
@@ -429,18 +931,18 @@ export default function LandingPage() {
                 </li>
                 <li>
                   <Link
-                    href="#"
+                    href="#metrics"
                     className="text-slate-400 hover:text-white transition-colors"
                   >
-                    Pricing
+                    Impact
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="#"
+                    href="#roadmap"
                     className="text-slate-400 hover:text-white transition-colors"
                   >
-                    Testimonials
+                    Roadmap
                   </Link>
                 </li>
               </ul>

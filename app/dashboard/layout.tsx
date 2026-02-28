@@ -10,11 +10,10 @@ import {
   Briefcase,
   FileText,
   GraduationCap,
-  LayoutDashboard,
-  Loader2,
   LogOut,
   StarsIcon,
   User,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

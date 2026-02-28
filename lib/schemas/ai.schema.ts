@@ -7,7 +7,7 @@ export const aiResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
     error: z.string().optional(),
   });
 
-export const matchSchema = z.object({
+export const trackerMatchSchema = z.object({
   uid: z.string(),
   scholarshipId: z.string(),
   eligible: z.boolean(),
@@ -17,7 +17,7 @@ export const matchSchema = z.object({
   calculatedAt: z.string(),
 });
 
-export const applicationSchema = z.object({
+export const trackerApplicationSchema = z.object({
   uid: z.string(),
   scholarshipId: z.string(),
   status: z.enum(["interested", "applied", "interview", "accepted", "rejected"]),
@@ -31,5 +31,15 @@ export const applicationSchema = z.object({
   lastUpdated: z.string(),
 });
 
-export type Match = z.infer<typeof matchSchema>;
-export type Application = z.infer<typeof applicationSchema>;
+export type TrackerMatch = z.infer<typeof trackerMatchSchema>;
+export type TrackerApplication = z.infer<typeof trackerApplicationSchema>;
+
+// Backward-compatible aliases
+/** @deprecated Use TrackerMatch instead */
+export type Match = TrackerMatch;
+/** @deprecated Use TrackerApplication instead */
+export type Application = TrackerApplication;
+/** @deprecated Use trackerMatchSchema instead */
+export const matchSchema = trackerMatchSchema;
+/** @deprecated Use trackerApplicationSchema instead */
+export const applicationSchema = trackerApplicationSchema;

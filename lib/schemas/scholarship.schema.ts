@@ -1,110 +1,66 @@
 import { z } from "zod";
 
-export const scholarshipSchema = z.object({
-  uid: z.string(),
-  title: z.string().min(1),
-  description: z.string(),
-  provider: z.string(),
-  amount: z
-    .object({
-      value: z.number(),
-      currency: z.string().default("MYR"),
-      type: z
-        .enum(["fixed", "range", "full_tuition", "partial", "variable"])
-        .default("fixed"),
-      minAmount: z.number().optional(),
-      maxAmount: z.number().optional(),
-    })
-    .optional(),
-  citizenship: z.array(z.string()).optional(),
-  incomeCap: z.number().optional(),
-  minGrades: z.record(z.string(), z.number()).optional(),
-  minGPA: z.number().optional(),
-  fieldsAllowed: z.array(z.string()).optional(),
-  educationLevels: z
-    .array(z.enum(["high_school", "undergraduate", "graduate", "postgraduate"]))
-    .optional(),
-  deadline: z.string(),
-  benefits: z.string(),
-  requirements: z.array(z.string()).optional(),
-  applicationUrl: z.string().url().optional(),
-  applicationProcess: z.string().optional(),
-  documentsRequired: z.array(z.string()).optional(),
-  contactEmail: z.string().email().optional(),
-  embedding: z.array(z.number()).optional(),
-  tags: z.array(z.string()).optional(),
-  status: z.enum(["active", "inactive", "expired"]).default("active"),
-  risk: z.object({
-    upfrontPayment: z.boolean().default(false),
-    noRequirements: z.boolean().default(false),
-    guaranteedApproval: z.boolean().default(false),
-    suspiciousOffer: z.boolean().default(false),
-    missingContactInfo: z.boolean().default(false),
-    riskLevel: z.enum(["LOW", "MEDIUM", "HIGH"]).default("LOW"),
-  }),
+// Re-export the canonical scholarship schema and types from application.schema
+export {
+  scholarshipSchema,
+  riskSchema,
+  type Scholarship,
+  type Risk,
+} from "@/lib/schemas/application.schema";
 
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
+/**
+ * Input schema for creating a scholarship via the API.
+ * Omits auto-generated fields (uid, createdAt, updatedAt, embedding).
+ */
 export const scholarshipInputSchema = z.object({
   title: z.string().min(1),
   description: z.string(),
-  provider: z.string(),
-  amount: z
-    .object({
-      value: z.number(),
-      currency: z.string().default("MYR"),
-      type: z
-        .enum(["fixed", "range", "full_tuition", "partial", "variable"])
-        .default("fixed"),
-      minAmount: z.number().optional(),
-      maxAmount: z.number().optional(),
-    })
+  provider: z.string().optional(),
+  sourceUrl: z.string(),
+  amount: z.string().optional(),
+  minimumGrades: z
+    .object({ "A*": z.number(), A: z.number(), B: z.number() })
     .optional(),
+  studyLevel: z.array(z.string()).optional(),
+  fieldOfStudy: z.string().optional(),
+  essayQuestion: z.string().optional(),
+  groupTaskDescription: z.string().optional(),
+  interviewFocusAreas: z.array(z.string()).optional(),
+  stages: z.array(z.enum(["essay", "group", "interview"])).optional(),
+  status: z.enum(["open", "closed"]).default("open"),
+  deadline: z.string().optional(),
+  eligibility: z.string().optional(),
   citizenship: z.array(z.string()).optional(),
   incomeCap: z.number().optional(),
-  minGrades: z.record(z.string(), z.number()).optional(),
   minGPA: z.number().optional(),
-  fieldsAllowed: z.array(z.string()).optional(),
   educationLevels: z
     .array(z.enum(["high_school", "undergraduate", "graduate", "postgraduate"]))
     .optional(),
-  deadline: z.string(),
-  benefits: z.string(),
+  fieldsAllowed: z.array(z.string()).optional(),
+  applicationLink: z.string().optional(),
   requirements: z.array(z.string()).optional(),
-  applicationUrl: z.string().url().optional(),
-  applicationProcess: z.string().optional(),
-  documentsRequired: z.array(z.string()).optional(),
-  contactEmail: z.string().email().optional(),
+  benefits: z.array(z.string()).optional(),
   tags: z.array(z.string()).optional(),
 });
 
+/**
+ * Schema for extracting scholarship data from unstructured text (parsing service).
+ * This is a loose shape used for AI extraction; results should be mapped
+ * to the canonical Scholarship type before storage.
+ */
 export const extractedScholarshipSchema = z.object({
   title: z.string(),
   description: z.string(),
   provider: z.string(),
-  amount: z
-    .object({
-      value: z.number(),
-      currency: z.string().default("USD"),
-      type: z
-        .enum(["fixed", "range", "full_tuition", "partial", "variable"])
-        .default("fixed"),
-      minAmount: z.number().optional(),
-      maxAmount: z.number().optional(),
-    })
-    .optional(),
   citizenship: z.array(z.string()).optional(),
   incomeCap: z.number().optional(),
-  minGrades: z.record(z.string(), z.number()).optional(),
   minGPA: z.number().optional(),
   fieldsAllowed: z.array(z.string()).optional(),
   educationLevels: z
     .array(z.enum(["high_school", "undergraduate", "graduate", "postgraduate"]))
     .optional(),
   deadline: z.string(),
-  benefits: z.string(),
+  benefits: z.string().optional(),
   requirements: z.array(z.string()).optional(),
   applicationUrl: z.string().optional(),
   applicationProcess: z.string().optional(),
@@ -126,9 +82,8 @@ export const scholarshipSearchFiltersSchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 
-export type Scholarship = z.infer<typeof scholarshipSchema>;
-export type ScholarshipInput = z.infer<typeof scholarshipInputSchema>;
 export type ExtractedScholarship = z.infer<typeof extractedScholarshipSchema>;
+export type ScholarshipInput = z.infer<typeof scholarshipInputSchema>;
 export type ScholarshipSearchFilters = z.infer<
   typeof scholarshipSearchFiltersSchema
 >;

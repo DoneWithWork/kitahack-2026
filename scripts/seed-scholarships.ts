@@ -1,42 +1,5 @@
 import { adminDb } from "@/lib/firebase/admin";
-
-interface Scholarship {
-  uid?: string;
-  title: string;
-  description: string;
-  sourceUrl: string;
-  benefits: string[];
-  minimumGrades: {
-    "A*": number;
-    A: number;
-    B: number;
-  };
-  studyLevel: string[];
-  fieldOfStudy: string;
-  essayQuestion: string;
-  groupTaskDescription: string;
-  interviewFocusAreas: string[];
-  stages: ("essay" | "group" | "interview")[];
-  status: "open" | "closed";
-  openingDate: string;
-  closingDate: string;
-  createdAt: string;
-  provider: string;
-  providerUrl: string;
-  amount: string;
-  deadline: string;
-  eligibility: string;
-  applicationLink: string;
-  requirements: string[];
-  risk: {
-    upfrontPayment: boolean;
-    noRequirements: boolean;
-    guaranteedApproval: boolean;
-    suspiciousOffer: boolean;
-    missingContactInfo: boolean;
-    riskLevel: "LOW" | "MEDIUM" | "HIGH";
-  };
-}
+import type { Scholarship } from "@/lib/schemas/application.schema";
 
 const malaysianScholarships: Omit<Scholarship, "uid" | "createdAt">[] = [
   {

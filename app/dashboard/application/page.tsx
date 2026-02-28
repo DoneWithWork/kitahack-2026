@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc/client";
 import {
   ArrowUpRight,
@@ -115,21 +116,20 @@ const getCountdownLabel = (deadline?: string): string => {
 };
 
 export default function ApplicationLandingPage() {
-  const { data: applications } = trpc.application.getUserApplications.useQuery();
-  const { data: scholarships } = trpc.scholarship.getAll.useQuery();
+  // Single combined query replaces getUserApplications (N+1 loop) + getAll
+  const { data: pageData, isLoading } =
+    trpc.application.getPageData.useQuery();
 
+  const applications = pageData?.applications;
   const scholarshipMap = useMemo(() => {
     const map = new Map<string, { title: string; provider?: string; deadline?: string }>();
-    scholarships?.forEach((scholarship) => {
-      if (!scholarship.uid) return;
-      map.set(scholarship.uid, {
-        title: scholarship.title,
-        provider: scholarship.provider,
-        deadline: scholarship.deadline,
-      });
-    });
+    const source = pageData?.scholarshipMap;
+    if (!source) return map;
+    for (const [id, info] of Object.entries(source)) {
+      map.set(id, info);
+    }
     return map;
-  }, [scholarships]);
+  }, [pageData?.scholarshipMap]);
 
   const totals = useMemo(() => {
     const total = applications?.length || 0;
@@ -164,6 +164,10 @@ export default function ApplicationLandingPage() {
 
     return sorted[0];
   }, [applications, scholarshipMap]);
+
+  if (isLoading) {
+    return <ApplicationPageSkeleton />;
+  }
 
   return (
     <div className="space-y-8">
@@ -428,17 +432,47 @@ export default function ApplicationLandingPage() {
                       </div>
                     </div>
                     <div className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-                      Next up: {getStageLabel(app.currentStage as Stage)}
+                      {app.status === "accepted" ? (
+                        <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-2">
+                          <Trophy className="h-4 w-4" />
+                          Congratulations! You have been accepted.
+                        </span>
+                      ) : app.status === "completed" ? (
+                        <span className="text-slate-600 dark:text-slate-400 font-medium flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4" />
+                          Application process completed.
+                        </span>
+                      ) : app.status === "rejected" ? (
+                        <span className="text-rose-600 dark:text-rose-400 font-medium">
+                          Application not selected for this cycle.
+                        </span>
+                      ) : (
+                        `Next up: ${getStageLabel(app.currentStage as Stage)}`
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-3">
-                      <Link
-                        href={`/dashboard/application/${app.applicationId}/${app.currentStage}`}
-                        className="flex-1"
-                      >
-                        <Button className="w-full">
-                          Continue application
-                        </Button>
-                      </Link>
+                      {app.status === "accepted" ? (
+                        <Link href="/dashboard/application/success" className="flex-1">
+                          <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white border-0">
+                            Claim Scholarship
+                          </Button>
+                        </Link>
+                      ) : ["completed", "rejected"].includes(app.status) ? (
+                        <Link href="/dashboard/scholarships" className="flex-1">
+                          <Button className="w-full">
+                            View More Scholarships
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/dashboard/application/${app.applicationId}/${app.currentStage}`}
+                          className="flex-1"
+                        >
+                          <Button className="w-full">
+                            Continue application
+                          </Button>
+                        </Link>
+                      )}
                       <Link href="/dashboard/scholarships" className="flex-1">
                         <Button variant="outline" className="w-full">
                           Explore more
@@ -470,6 +504,129 @@ export default function ApplicationLandingPage() {
             </CardContent>
           </Card>
         )}
+      </section>
+    </div>
+  );
+}
+
+function ApplicationPageSkeleton() {
+  return (
+    <div className="space-y-8">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-linear-to-br from-slate-950 via-slate-900 to-emerald-900 text-white">
+        <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-emerald-400/20 blur-3xl" />
+        <div className="absolute -left-24 bottom-0 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl" />
+        <div className="relative p-8 md:p-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Sparkles className="h-5 w-5 text-emerald-200" />
+                <Skeleton className="h-4 w-40 bg-white/10" />
+              </div>
+              <Skeleton className="h-10 w-80 bg-white/10" />
+              <Skeleton className="h-4 w-96 bg-white/10" />
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Skeleton className="h-10 w-48 rounded-md bg-white/10" />
+              <Skeleton className="h-10 w-40 rounded-md bg-white/10" />
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="mt-8 grid gap-4 md:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i} className="border-0 bg-white/10 text-white">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <Skeleton className="h-3 w-16 bg-white/10" />
+                      <Skeleton className="h-7 w-8 bg-white/10" />
+                    </div>
+                    <Skeleton className="h-5 w-5 rounded bg-white/10" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Insight Cards Section */}
+      <section className="grid gap-6 lg:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i} className="border-border/60">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4 rounded" />
+                <Skeleton className="h-5 w-36" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <div className="rounded-xl border border-dashed border-border p-4 space-y-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </section>
+
+      {/* Applications Section */}
+      <section className="space-y-4">
+        <div>
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="mt-2 h-4 w-72" />
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Card
+              key={i}
+              className="border-border/60 bg-card/95 backdrop-blur"
+            >
+              <CardHeader className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                </div>
+                <div className="rounded-2xl border border-border/60 bg-muted/40 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-3 w-8" />
+                  </div>
+                  <Skeleton className="h-2 w-full rounded-full" />
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4 rounded" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4 rounded" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4 rounded" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </div>
+                <Skeleton className="h-14 w-full rounded-xl" />
+                <div className="flex flex-wrap gap-3">
+                  <Skeleton className="h-10 flex-1 rounded-md" />
+                  <Skeleton className="h-10 flex-1 rounded-md" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </section>
     </div>
   );

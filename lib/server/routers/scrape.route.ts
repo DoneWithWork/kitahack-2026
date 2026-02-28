@@ -3,10 +3,42 @@ import { adminDb } from "@/lib/firebase/admin";
 import {
   scholarshipPromptOne,
   scholarshipPromptTwo,
-  ScholarshipSchema,
 } from "@/lib/scholarships/constants";
+import { scholarshipSchema } from "@/lib/schemas/application.schema";
+import type { Scholarship } from "@/lib/schemas/application.schema";
 import { protectedProcedure, router } from "@/lib/trpc/server";
 import z from "zod";
+
+/**
+ * Loose extraction schema for AI output — we validate the canonical
+ * shape after enriching with sourceUrl / timestamps.
+ */
+const scrapedScholarshipSchema = z.object({
+  title: z.string(),
+  provider: z.string().optional(),
+  providerUrl: z.string().optional(),
+  amount: z.string().optional(),
+  deadline: z.string().optional(),
+  eligibility: z.string().optional(),
+  description: z.string(),
+  applicationLink: z.string().optional(),
+  requirements: z.array(z.string()).optional(),
+  benefits: z.array(z.string()).optional(),
+  studyLevel: z.array(z.string()).optional(),
+  fieldOfStudy: z.string().optional(),
+  sourceUrl: z.string().optional(),
+  risk: z
+    .object({
+      upfrontPayment: z.boolean(),
+      noRequirements: z.boolean(),
+      guaranteedApproval: z.boolean(),
+      suspiciousOffer: z.boolean(),
+      missingContactInfo: z.boolean(),
+      riskLevel: z.enum(["LOW", "MEDIUM", "HIGH"]),
+    })
+    .optional(),
+  uid: z.string().optional(),
+});
 
 const scrapeSchema = z.object({
   search: z.string(),
@@ -56,23 +88,34 @@ export const scholarshipScrapeRouter = router({
           }
         }
 
-        const scholarshipResults: z.infer<typeof ScholarshipSchema>[] = [];
+        const scholarshipResults: Scholarship[] = [];
 
         for (const url of validLinks) {
           const scholarship = await CallGemini({
             prompt: scholarshipPromptTwo.replace("{{SCHOLARSHIP_URL}}", url),
-            schema: ScholarshipSchema,
+            schema: scrapedScholarshipSchema,
           });
-          const parsed = ScholarshipSchema.safeParse(scholarship);
+          const parsed = scrapedScholarshipSchema.safeParse(scholarship);
           if (!parsed.success) {
             console.log("Parse failed:", parsed.error);
             continue;
           }
 
-          scholarshipResults.push({
+          const now = new Date().toISOString();
+          const canonical = scholarshipSchema.safeParse({
             ...parsed.data,
             sourceUrl: url,
+            createdAt: now,
+            updatedAt: now,
+            status: "open",
           });
+
+          if (!canonical.success) {
+            console.log("Canonical parse failed:", canonical.error);
+            continue;
+          }
+
+          scholarshipResults.push(canonical.data);
         }
 
         const batch = adminDb().batch();
@@ -83,8 +126,7 @@ export const scholarshipScrapeRouter = router({
 
           batch.set(docRef, {
             ...scholarship,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            uid: docRef.id,
           });
         }
 

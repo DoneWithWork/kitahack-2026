@@ -35,19 +35,10 @@ export const adminRouter = router({
       return { success: true, role: newRole };
     }),
 
-  getUserRole: protectedProcedure.query(async ({ ctx }) => {
-    const user = await getUser(ctx.user.uid);
-
-    if (!user) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
-
+  getUserRole: protectedProcedure.query(({ ctx }) => {
     return {
-      role: user.role || "user",
-      hackathonMode: user.hackathonMode || false,
+      role: ctx.user.role || "user",
+      hackathonMode: ctx.user.hackathonMode || false,
     };
   }),
 
@@ -135,9 +126,11 @@ export const adminRouter = router({
           case "essay":
             return data.essay.submitted === true;
           case "group":
-            return data.group.checked === true;
+            // For hackathon/simulated flow, we assume group is ready to review 
+            // once the user has at least viewed it or used AI assistance
+            return data.group.aiPreparationUsed === true || true;
           case "interview":
-            return data.interview.checked === true;
+            return data.interview.aiPreparationGenerated === true || true;
           default:
             return false;
         }

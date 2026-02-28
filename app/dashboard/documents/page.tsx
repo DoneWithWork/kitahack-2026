@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { auth } from "@/lib/firebase/client";
 import { trpc } from "@/lib/trpc/client";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Award,
   BookOpen,
@@ -69,7 +70,7 @@ export default function DocumentsPage() {
   const utils = trpc.useUtils();
   const { data: certificates, isLoading: certsLoading } =
     trpc.document.getByType.useQuery({
-      type: "certificates",
+      type: "certificate",
     });
   const { data: transcript, isLoading: transcriptLoading } =
     trpc.transcript.get.useQuery();
@@ -120,7 +121,7 @@ export default function DocumentsPage() {
       await response.json();
       setFiles([]);
       setUploadOpen(false);
-      utils.document.getByType.invalidate({ type: "certificates" });
+      utils.document.getByType.invalidate({ type: "certificate" });
     } catch (error) {
       console.error("Upload error:", error);
       setUploadError(
@@ -166,9 +167,13 @@ export default function DocumentsPage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Certificates</p>
-                  <p className="text-lg font-semibold text-foreground">
-                    {certCount}
-                  </p>
+                  {certsLoading ? (
+                    <Skeleton className="mt-1 h-6 w-8" />
+                  ) : (
+                    <p className="text-lg font-semibold text-foreground">
+                      {certCount}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -179,9 +184,13 @@ export default function DocumentsPage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Transcripts</p>
-                  <p className="text-lg font-semibold text-foreground">
-                    {hasTranscript ? 1 : 0}
-                  </p>
+                  {transcriptLoading ? (
+                    <Skeleton className="mt-1 h-6 w-8" />
+                  ) : (
+                    <p className="text-lg font-semibold text-foreground">
+                      {hasTranscript ? 1 : 0}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -295,8 +304,40 @@ export default function DocumentsPage() {
         {/* Certificates Tab */}
         <TabsContent value="certificates" className="space-y-4">
           {certsLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Card
+                  key={i}
+                  className="overflow-hidden border-border bg-card shadow-sm"
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-5 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                      </div>
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      {Array.from({ length: 4 }).map((_, j) => (
+                        <div key={j} className="flex items-start gap-2">
+                          <Skeleton className="mt-0.5 h-4 w-4 shrink-0 rounded" />
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <Skeleton className="h-3 w-12" />
+                            <Skeleton className="h-4 w-24" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between border-t border-border pt-3">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-8 w-16 rounded-md" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           ) : certificates && certificates.length > 0 ? (
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -453,8 +494,62 @@ export default function DocumentsPage() {
         {/* Transcripts Tab */}
         <TabsContent value="transcripts" className="space-y-4">
           {transcriptLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="grid gap-6 xl:grid-cols-3">
+              {/* Transcript overview skeleton */}
+              <Card className="border-border bg-card shadow-sm xl:col-span-1">
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-2">
+                      <Skeleton className="h-5 w-40" />
+                      <Skeleton className="h-4 w-28" />
+                    </div>
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* GPA highlight skeleton */}
+                  <Skeleton className="h-24 w-full rounded-xl" />
+                  {/* Stats skeleton */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <Skeleton className="h-20 rounded-xl" />
+                    <Skeleton className="h-20 rounded-xl" />
+                  </div>
+                  {/* Upload info skeleton */}
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-8 w-24 rounded-md" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Subject grades skeleton */}
+              <Card className="border-border bg-card shadow-sm xl:col-span-2">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-5 w-5 rounded" />
+                      <Skeleton className="h-5 w-28" />
+                    </div>
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-4 py-3"
+                      >
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                        <Skeleton className="ml-3 h-9 w-9 shrink-0 rounded-lg" />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           ) : transcript ? (
             <div className="grid gap-6 xl:grid-cols-3">
@@ -497,7 +592,7 @@ export default function DocumentsPage() {
                     </div>
                     <div className="rounded-xl border border-border bg-muted/50 p-4 text-center">
                       <p className="text-2xl font-bold text-foreground">
-                        {transcript.subjects.length}
+                        {transcript.subjects?.length ?? 0}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         Subjects
@@ -538,13 +633,13 @@ export default function DocumentsPage() {
                       <CardTitle className="text-lg">Subject Grades</CardTitle>
                     </div>
                     <Badge variant="secondary">
-                      {transcript.subjects.length} subjects
+                      {transcript.subjects?.length ?? 0} subjects
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-2 sm:grid-cols-2">
-                    {transcript.subjects.map((subject, index) => {
+                    {(transcript.subjects ?? []).map((subject, index) => {
                       const grade = Number(subject.grade);
                       const gradeColor =
                         grade >= 4

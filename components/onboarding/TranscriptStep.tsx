@@ -1,6 +1,13 @@
 import { auth } from "@/lib/firebase/client";
 import { trpc } from "@/lib/trpc/client";
-import { BookOpen, ChevronRight, Loader2, Upload, X } from "lucide-react";
+import {
+  BookOpen,
+  CheckCircle2,
+  ChevronRight,
+  Loader2,
+  Upload,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import {
@@ -25,15 +32,17 @@ export function TranscriptStep({
   const [manualSubjects, setManualSubjects] = useState([
     { name: "", grade: "" },
   ]);
+  const [isUploaded, setIsUploaded] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const saveStatus = trpc.onboarding.saveTranscriptStatus.useMutation();
-
-  const [isUploaded, setIsUploaded] = useState(false);
 
   const handleFileUpload = async () => {
     if (!file) return;
 
     setIsUploading(true);
+    setUploadError(null);
+
     const formData = new FormData();
     const userId = auth.currentUser?.uid;
 
@@ -48,13 +57,18 @@ export function TranscriptStep({
 
       if (!response.ok) throw new Error("Upload failed");
 
-      setIsUploaded(true); // mark upload success
-      onNext(); // fix bug: call function
+      setIsUploaded(true);
     } catch (error) {
       console.error("Upload error:", error);
+      setUploadError("Failed to upload transcript. Please try again.");
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleContinue = async () => {
+    await saveStatus.mutateAsync({ uploaded: isUploaded });
+    onNext();
   };
 
   const addSubject = () => {
@@ -84,23 +98,67 @@ export function TranscriptStep({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Upload success feedback */}
+        {isUploaded && (
+          <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 animate-fade-in">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <div>
+                <p className="font-medium text-green-800 dark:text-green-200">
+                  Transcript uploaded and processed successfully!
+                </p>
+                <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                  Your grades have been extracted. Click Continue to proceed.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Upload error feedback */}
+        {uploadError && (
+          <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-300 dark:border-red-700 animate-fade-in">
+            <p className="font-medium text-red-800 dark:text-red-200">
+              {uploadError}
+            </p>
+          </div>
+        )}
+
         {!showManualEntry ? (
           <>
-            <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 text-center hover:border-blue-500 transition-colors">
-              <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+            <div
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                isUploaded
+                  ? "border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-900/10"
+                  : "border-slate-300 dark:border-slate-700 hover:border-blue-500"
+              }`}
+            >
+              {isUploaded ? (
+                <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              ) : (
+                <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+              )}
               <p className="text-lg font-medium text-slate-900 dark:text-white mb-2">
-                Upload your transcript
+                {isUploaded ? "Transcript uploaded" : "Upload your transcript"}
               </p>
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                Supports PDF, PNG, JPG (max 10MB)
+                {isUploaded
+                  ? "You can upload a new file to replace the current one"
+                  : "Supports PDF, PNG, JPG (max 10MB)"}
               </p>
               <Input
                 type="file"
                 accept=".pdf,.png,.jpg,.jpeg"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  setFile(e.target.files?.[0] || null);
+                  setUploadError(null);
+                  if (e.target.files?.[0]) {
+                    setIsUploaded(false);
+                  }
+                }}
                 className="max-w-sm mx-auto"
               />
-              {file && (
+              {file && !isUploaded && (
                 <p className="mt-2 text-sm text-blue-600">
                   Selected: {file.name}
                 </p>
@@ -115,6 +173,11 @@ export function TranscriptStep({
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Uploading & Processing...
+                </>
+              ) : isUploaded ? (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Uploaded Successfully
                 </>
               ) : (
                 <>
@@ -171,16 +234,28 @@ export function TranscriptStep({
           </div>
         )}
 
+        {/* Continue button */}
         <div className="flex gap-4 pt-4">
           <Button
-            onClick={async () => {
-              await saveStatus.mutateAsync({ uploaded: true });
-              onNext();
-            }}
-            className="flex-1 bg-blue-600 hover:bg-blue-700"
+            onClick={handleContinue}
+            disabled={saveStatus.isPending}
+            className={`flex-1 h-12 transition-all duration-300 ${
+              isUploaded
+                ? "bg-green-600 hover:bg-green-700 shadow-lg shadow-green-600/25 animate-[borderPulse_2s_ease-in-out_infinite]"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
-            Continue
-            <ChevronRight className="ml-2 h-4 w-4" />
+            {saveStatus.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                {isUploaded ? (
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                ) : null}
+                {isUploaded ? "Continue" : "Skip for now"}
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </>
+            )}
           </Button>
         </div>
       </CardContent>

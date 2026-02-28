@@ -1,13 +1,15 @@
 import { extractText } from "@/lib/ai";
 import { extractGradesPrompt } from "@/lib/ai/constants";
-import { adminDb, adminStorage } from "@/lib/firebase/admin";
+import { adminStorage } from "@/lib/firebase/admin";
+import { createDocument } from "@/lib/repositories/documents.repo";
 import { updateUser } from "@/lib/repositories/users.repo";
+import type { Document } from "@/lib/schemas/document.schema";
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { z } from "zod";
 
-export const CertificateSchema = z.object({
+const CertificateExtractionSchema = z.object({
   certificateTitle: z.string().min(1),
-
   certificateType: z.enum([
     "academic",
     "completion",
@@ -15,23 +17,17 @@ export const CertificateSchema = z.object({
     "award",
     "professional",
   ]),
-
   recipientName: z.string().min(1),
-
   issuerName: z.string().min(1),
-
   programName: z.string().min(1),
-
   result: z.string().optional(),
-
   issueDate: z
     .string()
     .refine((val) => !Number.isNaN(Date.parse(val)), "Invalid date format"),
-
   certificateId: z.string().optional(),
-
   verificationCode: z.string().optional(),
 });
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -49,7 +45,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const uploadedDocuments: { certificateId: string }[] = [];
+    const uploadedDocuments: { documentId: string }[] = [];
 
     const bucket = adminStorage().bucket();
 
@@ -68,25 +64,43 @@ export async function POST(req: NextRequest) {
         buffer,
         file,
         prompt: extractGradesPrompt,
-        schema: CertificateSchema,
+        schema: CertificateExtractionSchema,
       });
 
-      const doc = await adminDb()
-        .collection("certificates")
-        .add({
-          userId,
-          ...parsed,
-          uploadedAt: new Date(),
-          storagePath: filename,
-        });
+      const now = new Date().toISOString();
+      const docId = randomUUID();
 
-      uploadedDocuments.push({ certificateId: doc.id });
+      const document: Document = {
+        id: docId,
+        uid: userId,
+        type: "certificate",
+        name: parsed.certificateTitle,
+        fileUrl: `gs://${bucket.name}/${filename}`,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+        isVerified: false,
+        uploadedAt: now,
+        updatedAt: now,
+        storagePath: filename,
+        // Certificate-specific fields
+        certificateTitle: parsed.certificateTitle,
+        certificateType: parsed.certificateType,
+        issuerName: parsed.issuerName,
+        programName: parsed.programName,
+        recipientName: parsed.recipientName,
+        issueDate: parsed.issueDate,
+        ...(parsed.result !== undefined && { result: parsed.result }),
+      };
 
-      await updateUser(userId, {
-        documentsUploaded: true,
-        onboardingStep: 4,
-      });
+      await createDocument(document);
+      uploadedDocuments.push({ documentId: docId });
     }
+
+    await updateUser(userId, {
+      documentsUploaded: true,
+      onboardingStep: 4,
+    });
 
     return NextResponse.json({
       success: true,

@@ -9,8 +9,9 @@ export const subjectSchema = z.object({
 export const transcriptSchema = z.object({
   uid: z.string(),
   subjects: z.array(subjectSchema),
-  gpa: z.union([z.string(), z.number()]),
-  year: z.union([z.string(), z.number()]),
+  gpa: z.union([z.string(), z.number()]).optional(),
+  year: z.union([z.string(), z.number()]).optional(),
+  school: z.string().optional(),
   uploadedAt: z.string(),
   fileUrl: z.string().url().optional(),
 });

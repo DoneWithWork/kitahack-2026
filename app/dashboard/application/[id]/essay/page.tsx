@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState, useEffect, useOptimistic } from "react";
-import { useParams } from "next/navigation";
+import { useMemo, useState, useEffect, useOptimistic, startTransition } from "react";
+import { useParams, useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import { trpc } from "@/lib/trpc/client";
 import { Button } from "@/components/ui/button";
@@ -21,9 +21,11 @@ import {
 } from "lucide-react";
 import { AdminModeToggle } from "@/components/admin-mode-toggle";
 import { formatDateTime } from "@/lib/utils/dates";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EssayPage() {
   const params = useParams();
+  const router = useRouter();
   const applicationId = params.id as string;
 
   const [draft, setDraft] = useState("");
@@ -96,8 +98,65 @@ export default function EssayPage() {
 
   if (appLoading) {
     return (
-      <div className="flex items-center justify-center min-h-100">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-4">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-7 w-56" />
+          </div>
+          <Skeleton className="h-9 w-40 rounded-md" />
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* Left: Essay card skeleton */}
+          <Card className="xl:order-1">
+            <CardHeader>
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-60 mt-1" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-28" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-28" />
+                <Skeleton className="h-[300px] w-full rounded-md" />
+                <div className="flex gap-3">
+                  <Skeleton className="h-10 w-28 rounded-md" />
+                  <Skeleton className="h-10 w-32 rounded-md" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Right: AI assistant skeleton */}
+          <Card className="xl:order-2">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-5 rounded" />
+                <Skeleton className="h-5 w-36" />
+              </div>
+              <Skeleton className="h-4 w-56 mt-1" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-10 w-full rounded-md" />
+              <Skeleton className="h-3 w-28" />
+              <div className="grid grid-cols-1 lg:grid-cols-[200px_minmax(0,1fr)] gap-4">
+                <div className="rounded-lg border border-border bg-muted/40 p-2 space-y-2">
+                  <Skeleton className="h-4 w-16 mx-1" />
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full rounded-md" />
+                  ))}
+                </div>
+                <Skeleton className="h-64 w-full rounded-xl" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -134,24 +193,27 @@ export default function EssayPage() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!localDraft.trim() || isSubmitting) return;
     setIsSubmitting(true);
-    setOptimisticSubmitted(true);
 
-    try {
-      await submitMutation.mutateAsync({
-        applicationId,
-        scholarshipId: application.scholarshipId,
-        draft: localDraft,
-      });
-      setShowAdminHighlight(true);
-    } catch (err) {
-      console.error("Error submitting essay:", err);
-      setOptimisticSubmitted(false);
-    } finally {
-      setIsSubmitting(false);
-    }
+    startTransition(async () => {
+      setOptimisticSubmitted(true);
+
+      try {
+        await submitMutation.mutateAsync({
+          applicationId,
+          scholarshipId: application.scholarshipId,
+          draft: localDraft,
+        });
+        setShowAdminHighlight(true);
+      } catch (err) {
+        console.error("Error submitting essay:", err);
+        setOptimisticSubmitted(false);
+      } finally {
+        setIsSubmitting(false);
+      }
+    });
   };
 
   const handleGetSuggestions = async () => {
@@ -164,7 +226,7 @@ export default function EssayPage() {
       });
       setAiSuggestion(result.assistance);
       setAiHistoryCursor(null);
-      utils.application.getApplicationById.invalidate({ applicationId });
+      await utils.application.getApplicationById.refetch({ applicationId });
     } catch (err) {
       console.error("Error getting suggestions:", err);
       setAiSuggestion(
@@ -241,6 +303,19 @@ export default function EssayPage() {
                       </p>
                     )}
                   </div>
+                )}
+
+                {isReviewed && essayStage.passed && (
+                  <Button
+                    onClick={() =>
+                      router.push(
+                        `/dashboard/application/${applicationId}/group`,
+                      )
+                    }
+                    className="w-full"
+                  >
+                    Proceed to Group Case Study
+                  </Button>
                 )}
 
                 <Textarea

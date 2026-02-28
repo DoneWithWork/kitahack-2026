@@ -1,11 +1,13 @@
 import { extractText } from "@/lib/ai";
 import { extractGradesPrompt } from "@/lib/ai/constants";
-import { adminDb, adminStorage } from "@/lib/firebase/admin";
+import { adminStorage } from "@/lib/firebase/admin";
+import { createTranscript } from "@/lib/repositories/transcripts.repo";
 import { updateUser } from "@/lib/repositories/users.repo";
+import type { Transcript } from "@/lib/schemas/transcript.schema";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-const TranscriptSchema = z.object({
+const TranscriptExtractionSchema = z.object({
   subjects: z.array(
     z.object({
       name: z.string(),
@@ -13,8 +15,9 @@ const TranscriptSchema = z.object({
       code: z.string().optional(),
     }),
   ),
-  year: z.number(),
-  school: z.string(),
+  year: z.number().optional(),
+  school: z.string().optional(),
+  gpa: z.number().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -49,17 +52,19 @@ export async function POST(req: NextRequest) {
       buffer,
       file,
       prompt: extractGradesPrompt,
-      schema: TranscriptSchema,
+      schema: TranscriptExtractionSchema,
     });
 
-    const doc = await adminDb()
-      .collection("transcripts")
-      .doc(userId)
-      .set({
-        userId,
-        ...parsed,
-        uploadedAt: new Date(),
-      });
+    const transcript: Transcript = {
+      uid: userId,
+      subjects: parsed.subjects,
+      uploadedAt: new Date().toISOString(),
+      ...(parsed.gpa !== undefined && { gpa: parsed.gpa }),
+      ...(parsed.year !== undefined && { year: parsed.year }),
+      ...(parsed.school !== undefined && { school: parsed.school }),
+    };
+
+    await createTranscript(transcript);
 
     // update user onboarding status
     await updateUser(userId, {

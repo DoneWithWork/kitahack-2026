@@ -76,8 +76,9 @@ export const getDocumentsByType = async (
 ): Promise<Document[]> => {
   try {
     const snapshot = await adminDb()
-      .collection(type)
-      .where("userId", "==", uid)
+      .collection(DOCUMENTS_COLLECTION)
+      .where("uid", "==", uid)
+      .where("type", "==", type)
       .orderBy("uploadedAt", "desc")
       .get();
     return snapshot.docs.map((doc) =>

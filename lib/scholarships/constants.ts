@@ -1,33 +1,10 @@
-import { z } from "zod";
+import { scholarshipSchema, riskSchema } from "@/lib/schemas/application.schema";
+import type { Scholarship, Risk } from "@/lib/schemas/application.schema";
 
-export const RiskSchema = z.object({
-  upfrontPayment: z.boolean(),
-  noRequirements: z.boolean(),
-  guaranteedApproval: z.boolean(),
-  suspiciousOffer: z.boolean(),
-  missingContactInfo: z.boolean(),
-  riskLevel: z.enum(["LOW", "MEDIUM", "HIGH"]),
-});
+// Re-export canonical schemas and types for backward compatibility
+export { scholarshipSchema as ScholarshipSchema, riskSchema as RiskSchema };
+export type { Scholarship, Risk };
 
-export const ScholarshipSchema = z.object({
-  title: z.string(),
-  provider: z.string(),
-  providerUrl: z.string(),
-  amount: z.string(),
-  deadline: z.string(),
-  eligibility: z.string(),
-  description: z.string(),
-  applicationLink: z.string(),
-  requirements: z.array(z.string()),
-  benefits: z.array(z.string()),
-  studyLevel: z.array(z.string()),
-  fieldOfStudy: z.string(),
-  sourceUrl: z.string(),
-  risk: RiskSchema,
-  uid: z.string(),
-});
-
-export type Scholarship = z.infer<typeof ScholarshipSchema>;
 export const scholarshipPromptOne = `
 You are a data extraction engine.
 

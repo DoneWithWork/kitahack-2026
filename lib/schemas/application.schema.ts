@@ -6,35 +6,72 @@ export const minimumGradesSchema = z.object({
   B: z.number(),
 });
 
+export const riskSchema = z.object({
+  upfrontPayment: z.boolean().default(false),
+  noRequirements: z.boolean().default(false),
+  guaranteedApproval: z.boolean().default(false),
+  suspiciousOffer: z.boolean().default(false),
+  missingContactInfo: z.boolean().default(false),
+  riskLevel: z.enum(["LOW", "MEDIUM", "HIGH"]).default("LOW"),
+});
+
 export const scholarshipSchema = z.object({
+  // Core identity
   uid: z.string().optional(),
   title: z.string(),
   description: z.string(),
   sourceUrl: z.string(),
-  benefits: z.array(z.string()),
-  minimumGrades: minimumGradesSchema,
-  studyLevel: z.array(z.string()),
-  fieldOfStudy: z.string(),
-  essayQuestion: z.string(),
-  groupTaskDescription: z.string(),
-  interviewFocusAreas: z.array(z.string()),
-  stages: z.array(z.enum(["essay", "group", "interview"])),
-  status: z.enum(["open", "closed"]),
-  openingDate: z.string(),
-  closingDate: z.string(),
-  createdAt: z.string(),
   provider: z.string().optional(),
   providerUrl: z.string().optional(),
+
+  // Financial
   amount: z.string().optional(),
+
+  // Academic requirements (seed data format)
+  minimumGrades: minimumGradesSchema.optional(),
+  studyLevel: z.array(z.string()).optional(),
+  fieldOfStudy: z.string().optional(),
+
+  // Application workflow fields
+  essayQuestion: z.string().optional(),
+  groupTaskDescription: z.string().optional(),
+  interviewFocusAreas: z.array(z.string()).optional(),
+  stages: z.array(z.enum(["essay", "group", "interview"])).optional(),
+
+  // Status and dates
+  status: z.enum(["open", "closed"]).default("open"),
+  openingDate: z.string().optional(),
+  closingDate: z.string().optional(),
   deadline: z.string().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string().optional(),
+
+  // Eligibility details
   eligibility: z.string().optional(),
+  citizenship: z.array(z.string()).optional(),
+  incomeCap: z.number().optional(),
+  minGPA: z.number().optional(),
+  educationLevels: z
+    .array(z.enum(["high_school", "undergraduate", "graduate", "postgraduate"]))
+    .optional(),
+  fieldsAllowed: z.array(z.string()).optional(),
+
+  // Application details
   applicationLink: z.string().optional(),
   requirements: z.array(z.string()).optional(),
-  risk: z.any().optional(),
+  benefits: z.array(z.string()).optional(),
+
+  // Risk assessment
+  risk: riskSchema.optional(),
+
+  // AI/search features
+  embedding: z.array(z.number()).optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 export type Scholarship = z.infer<typeof scholarshipSchema>;
 export type MinimumGrades = z.infer<typeof minimumGradesSchema>;
+export type Risk = z.infer<typeof riskSchema>;
 
 export const aiHistoryEntrySchema = z.object({
   id: z.string(),

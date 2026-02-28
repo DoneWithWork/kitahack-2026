@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { AdminModeToggle } from "@/components/admin-mode-toggle";
 import { formatDateTime } from "@/lib/utils/dates";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function GroupPage() {
   const params = useParams();
@@ -80,8 +81,74 @@ export default function GroupPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-4">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-7 w-56" />
+          </div>
+          <Skeleton className="h-9 w-40 rounded-md" />
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* Left (order-1): Case study card skeleton */}
+          <Card className="order-1 xl:order-1">
+            <CardHeader>
+              <Skeleton className="h-5 w-36" />
+              <Skeleton className="h-4 w-64 mt-1" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-5 w-40" />
+                </div>
+                <Skeleton className="h-24 w-full rounded-lg" />
+              </div>
+              <Separator />
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-5 w-48" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Right (order-2): AI assistant skeleton */}
+          <Card className="order-2 xl:order-2">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-5 rounded" />
+                <Skeleton className="h-5 w-44" />
+              </div>
+              <Skeleton className="h-4 w-56 mt-1" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full rounded-md" />
+                ))}
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-[200px_minmax(0,1fr)] gap-4">
+                <div className="rounded-lg border border-border bg-muted/40 p-2 space-y-2">
+                  <Skeleton className="h-4 w-16 mx-1" />
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full rounded-md" />
+                  ))}
+                </div>
+                <Skeleton className="h-64 w-full rounded-xl" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -117,7 +184,7 @@ export default function GroupPage() {
       });
       handleMarkUsed();
       setAiHistoryCursor(null);
-      utils.application.getGroupStageById.invalidate({ applicationId });
+      await utils.application.getGroupStageById.refetch({ applicationId });
     } catch (err) {
       console.error("Error getting assistance:", err);
     } finally {

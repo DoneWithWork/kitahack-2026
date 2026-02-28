@@ -79,10 +79,10 @@ export default function DocumentsPage() {
   const { data: allDocuments, refetch: refetchDocuments } =
     trpc.document.getAll.useQuery();
   const { data: certificates } = trpc.document.getByType.useQuery({
-    type: "certificates",
+    type: "certificate",
   });
   const { data: transcripts } = trpc.document.getByType.useQuery({
-    type: "transcripts",
+    type: "transcript",
   });
   const uploadMutation = trpc.document.uploadWithOCR.useMutation();
   const deleteMutation = trpc.document.delete.useMutation();

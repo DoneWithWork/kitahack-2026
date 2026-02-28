@@ -18,12 +18,7 @@ export function AdminModeToggle({ applicationId, highlight }: AdminModeTogglePro
 
   const { data: roleData } = trpc.admin.getUserRole.useQuery(
     undefined,
-    { enabled: !!appId }
-  );
-
-  const { data: appData } = trpc.application.getApplicationById.useQuery(
-    { applicationId: appId! },
-    { enabled: !!appId }
+    { enabled: !!appId },
   );
 
   const utils = trpc.useUtils();
@@ -38,8 +33,7 @@ export function AdminModeToggle({ applicationId, highlight }: AdminModeTogglePro
       if (nextRole === "admin_simulated") {
         router.replace(`/dashboard/admin?applicationId=${appId}`);
       } else {
-        const currentStage = appData?.application.currentStage || "essay";
-        router.replace(`/dashboard/application/${appId}/${currentStage}`);
+        router.replace(`/dashboard/application/${appId}/essay`);
       }
     },
   });
@@ -56,14 +50,15 @@ export function AdminModeToggle({ applicationId, highlight }: AdminModeTogglePro
 
   const isAdminMode = roleData?.role === "admin_simulated";
   const isLoading = toggleMutation.isPending;
-  const highlightClass =
-    highlight && !isAdminMode && !isLoading
-      ? "ring-2 ring-amber-400/80 shadow-sm shadow-amber-500/30 animate-pulse"
-      : "";
 
   if (!roleData) {
     return null;
   }
+
+  const highlightClass =
+    highlight && !isAdminMode && !isLoading
+      ? "ring-2 ring-amber-400/80 shadow-sm shadow-amber-500/30 animate-pulse"
+      : "";
 
   return (
     <Button

@@ -10,6 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, XCircle, Clock, FileText, Users, Video, AlertTriangle, ArrowLeft, Shield } from "lucide-react";
 import { AdminModeToggle } from "@/components/admin-mode-toggle";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const STAGE_LABELS = {
   essay: "Essay",
@@ -40,30 +42,71 @@ export default function AdminDashboardPage() {
     enabled: !!applicationId,
   });
 
-  const { data: adminData, isLoading, refetch } = trpc.admin.getApplicationForAdmin.useQuery(
+  const { data: adminData, isLoading } = trpc.admin.getApplicationForAdmin.useQuery(
     { applicationId: applicationId! },
     { enabled: !!applicationId && roleData?.role === "admin_simulated" }
   );
 
-  const approveMutation = trpc.admin.approveStage.useMutation({
+  const utils = trpc.useUtils();
+
+  const toggleMutation = trpc.admin.toggleAdminMode.useMutation({
     onSuccess: () => {
-      setApprovingAction(null);
-      setNotes("");
-      refetch();
-    },
-    onError: () => {
-      setApprovingAction(null);
+      utils.admin.getUserRole.setData(undefined, {
+        role: "user",
+        hackathonMode: false,
+      });
     },
   });
 
+  const approveMutation = trpc.admin.approveStage.useMutation({
+    onSuccess: async (data, variables) => {
+      setApprovingAction(null);
+      setNotes("");
+
+      if (variables.passed) {
+        toast.success("Stage approved", {
+          description: "The application has been advanced to the next stage.",
+        });
+      } else {
+        toast.error("Stage rejected", {
+          description: "The application stage has been rejected.",
+        });
+      }
+
+      // Toggle back to user mode and navigate to the stage page
+      try {
+        await toggleMutation.mutateAsync({ enable: false });
+      } catch {
+        // Even if toggle fails, still navigate back
+      }
+
+      const nextStage = data.newStage || currentStage;
+      router.replace(`/dashboard/application/${applicationId}/${nextStage}`);
+    },
+    onError: (error) => {
+      setApprovingAction(null);
+      toast.error("Action failed", {
+        description: error.message || "Something went wrong. Please try again.",
+      });
+    },
+  });
+
+  const isAdmin = roleData?.role === "admin_simulated";
+
   useEffect(() => {
-    if (roleData?.role === "admin_simulated") {
-      setWasAdmin(true);
-      setIsExiting(false);
+    if (isAdmin) {
+      const timer = setTimeout(() => {
+        setWasAdmin(true);
+        setIsExiting(false);
+      }, 0);
+      return () => clearTimeout(timer);
     } else if (wasAdmin) {
-      setIsExiting(true);
+      const timer = setTimeout(() => {
+        setIsExiting(true);
+      }, 0);
+      return () => clearTimeout(timer);
     }
-  }, [roleData?.role, wasAdmin]);
+  }, [isAdmin, wasAdmin]);
 
   if (!applicationId) {
     return (
@@ -114,8 +157,90 @@ export default function AdminDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-purple-50/30 dark:bg-purple-950/10">
+        <div className="p-4 lg:p-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-7 w-48" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            </div>
+            <Skeleton className="h-9 w-40 rounded-md" />
+          </div>
+
+          <Skeleton className="h-14 w-full rounded-lg" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-1 space-y-6">
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-5 w-32" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-3 w-20" />
+                      <Skeleton className="h-5 w-full" />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-5 w-32" />
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <Skeleton className="h-5 w-5 rounded-full" />
+                      <Skeleton className="h-5 w-32" />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="lg:col-span-2 space-y-6">
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-4 w-64 mt-1" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-24 w-full" />
+                    <Separator />
+                    <Skeleton className="h-5 w-40" />
+                    <Skeleton className="h-48 w-full" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="lg:col-span-1 space-y-6">
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-4 w-48 mt-1" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-24 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -287,7 +412,7 @@ export default function AdminDashboardPage() {
                   <div className="space-y-2">
                     <p className="font-medium">Interview Focus Areas:</p>
                     <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                      {scholarship.interviewFocusAreas.map((area, idx) => (
+                      {(scholarship.interviewFocusAreas ?? []).map((area, idx) => (
                         <li key={idx}>{area}</li>
                       ))}
                     </ul>
@@ -410,7 +535,7 @@ export default function AdminDashboardPage() {
                 <div>
                   <p className="text-muted-foreground">Benefits</p>
                   <ul className="list-disc list-inside">
-                    {scholarship.benefits.map((benefit, idx) => (
+                    {(scholarship.benefits ?? []).map((benefit, idx) => (
                       <li key={idx}>{benefit}</li>
                     ))}
                   </ul>

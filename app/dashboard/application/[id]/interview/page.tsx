@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import { trpc } from "@/lib/trpc/client";
 import { Button } from "@/components/ui/button";
@@ -23,9 +23,11 @@ import {
 } from "lucide-react";
 import { AdminModeToggle } from "@/components/admin-mode-toggle";
 import { formatDateTime } from "@/lib/utils/dates";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function InterviewPage() {
   const params = useParams();
+  const router = useRouter();
   const applicationId = params.id as string;
 
   const [aiLoading, setAiLoading] = useState<string | null>(null);
@@ -79,8 +81,110 @@ export default function InterviewPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-4">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-7 w-56" />
+          </div>
+          <Skeleton className="h-9 w-40 rounded-md" />
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* Left: Interview overview skeleton */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-36" />
+              <Skeleton className="h-4 w-56 mt-1" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Interviewer details skeleton */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-5 w-32" />
+                </div>
+                <div className="rounded-xl border border-border p-6 space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-16 w-16 rounded-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-7 w-40" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-4 w-48" />
+                  <div className="pt-2 border-t border-border space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Focus areas skeleton */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-5 w-40" />
+                </div>
+                <div className="rounded-lg bg-muted/40 p-4 space-y-2">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-4 w-3/4" />
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* What to expect skeleton */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-5 w-28" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-52" />
+                  <Skeleton className="h-4 w-44" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Right: AI assistant skeleton */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-5 rounded" />
+                <Skeleton className="h-5 w-48" />
+              </div>
+              <Skeleton className="h-4 w-56 mt-1" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full rounded-md" />
+                ))}
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-[200px_minmax(0,1fr)] gap-4">
+                <div className="rounded-lg border border-border bg-muted/40 p-2 space-y-2">
+                  <Skeleton className="h-4 w-16 mx-1" />
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full rounded-md" />
+                  ))}
+                </div>
+                <Skeleton className="h-64 w-full rounded-xl" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -117,7 +221,7 @@ export default function InterviewPage() {
       });
       handleMarkUsed();
       setAiHistoryCursor(null);
-      utils.application.getInterviewStageById.invalidate({ applicationId });
+      await utils.application.getInterviewStageById.refetch({ applicationId });
     } catch (err) {
       console.error("Error getting assistance:", err);
     } finally {
@@ -258,7 +362,7 @@ export default function InterviewPage() {
                 </h3>
                 <div className="bg-muted p-4 rounded-lg">
                   <ul className="list-disc list-inside space-y-1">
-                    {scholarship.interviewFocusAreas.map((area, index) => (
+                    {(scholarship.interviewFocusAreas ?? []).map((area, index) => (
                       <li key={index}>{area}</li>
                     ))}
                   </ul>
@@ -299,6 +403,15 @@ export default function InterviewPage() {
                     instructions.
                   </p>
                 </div>
+              )}
+
+              {isReviewed && interviewStage.passed && (
+                <Button
+                  onClick={() => router.push("/dashboard/application")}
+                  className="w-full"
+                >
+                  View All Applications
+                </Button>
               )}
             </CardContent>
           </Card>

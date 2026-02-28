@@ -143,6 +143,88 @@ export const getUserApplicationsForScholarship = async (
   }
 };
 
+/**
+ * Fetches all applications for a user across ALL scholarships.
+ *
+ * Strategy: try a collectionGroup query first (fast, single round-trip).
+ * If it fails with FAILED_PRECONDITION (missing index), fall back to
+ * iterating each scholarship's subcollection in parallel.
+ */
+export const getUserApplicationsAll = async (
+  userId: string,
+): Promise<
+  Array<{
+    application: Application;
+    applicationId: string;
+    scholarshipId: string;
+  }>
+> => {
+  // --- Attempt 1: collectionGroup (requires Firestore index) ---
+  try {
+    const snapshot = await adminDb()
+      .collectionGroup("applications")
+      .where("userId", "==", userId)
+      .get();
+
+    return snapshot.docs.map((doc) => {
+      const application = sanitizeApplicationData(
+        doc.data() as Record<string, unknown>,
+      );
+      const scholarshipId = doc.ref.parent.parent?.id ?? "";
+      return { application, applicationId: doc.id, scholarshipId };
+    });
+  } catch (error: unknown) {
+    const code = (error as { code?: number }).code;
+    // Code 9 = FAILED_PRECONDITION (missing index). Fall through.
+    if (code !== 9) {
+      logger.error({ error, userId }, "Error getting all user applications");
+      throw error;
+    }
+    logger.warn(
+      { userId },
+      "collectionGroup index missing for applications – falling back to per-scholarship queries",
+    );
+  }
+
+  // --- Attempt 2: iterate each scholarship's subcollection ---
+  try {
+    const scholarshipsSnap = await adminDb()
+      .collection(SCHOLARSHIPS_COLLECTION)
+      .get();
+
+    const results = await Promise.all(
+      scholarshipsSnap.docs.map(async (scholarshipDoc) => {
+        const appSnap = await adminDb()
+          .collection(SCHOLARSHIPS_COLLECTION)
+          .doc(scholarshipDoc.id)
+          .collection("applications")
+          .where("userId", "==", userId)
+          .limit(1)
+          .get();
+
+        if (appSnap.empty) return null;
+
+        const doc = appSnap.docs[0];
+        const application = sanitizeApplicationData(
+          doc.data() as Record<string, unknown>,
+        );
+        return {
+          application,
+          applicationId: doc.id,
+          scholarshipId: scholarshipDoc.id,
+        };
+      }),
+    );
+
+    return results.filter(
+      (r): r is NonNullable<typeof r> => r !== null,
+    );
+  } catch (error) {
+    logger.error({ error, userId }, "Error getting all user applications (fallback)");
+    throw error;
+  }
+};
+
 export const getApplicationByApplicationId = async (
   applicationId: string,
 ): Promise<{ application: Application; scholarshipId: string } | null> => {
