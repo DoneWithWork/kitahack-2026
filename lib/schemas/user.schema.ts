@@ -9,7 +9,7 @@ export const userSchema = z.object({
   incomeBracket: z.enum(["low", "medium", "high"]).optional(),
   interests: z.array(z.string()).default([]),
   goals: z.string().optional(),
-  citizenship: z.string().optional(),
+  citizenship: z.string().default("Malaysian"),
   educationLevel: z.string().optional(),
   fieldOfStudy: z.string().optional(),
   currentSchool: z.string().optional(),
