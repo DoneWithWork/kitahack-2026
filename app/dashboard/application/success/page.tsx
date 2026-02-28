@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -19,6 +20,44 @@ export default function ScholarshipSuccessPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setMounted(true);
+      
+      // Initial burst
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#F59E0B", "#EA580C", "#FBBF24", "#FFFFFF"]
+      });
+
+      // Side bursts after a delay
+      const sideBursts = setTimeout(() => {
+        const duration = 3 * 1000;
+        const end = Date.now() + duration;
+
+        const frame = () => {
+          confetti({
+            particleCount: 2,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ["#F59E0B", "#EA580C"]
+          });
+          confetti({
+            particleCount: 2,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ["#F59E0B", "#EA580C"]
+          });
+
+          if (Date.now() < end) {
+            requestAnimationFrame(frame);
+          }
+        };
+        frame();
+      }, 500);
+
+      return () => clearTimeout(sideBursts);
     }, 0);
     return () => clearTimeout(timer);
   }, []);

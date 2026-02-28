@@ -138,7 +138,7 @@ export default function DocumentsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="rounded-2xl border border-border bg-gradient-to-br from-blue-50 via-white to-amber-50 p-6 shadow-sm dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
+      <div className="rounded-2xl border border-border bg-linear-to-br from-blue-50 via-white to-amber-50 p-6 shadow-sm dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-3">

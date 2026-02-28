@@ -41,7 +41,7 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 const BENEFIT_OPTIONS = [
   "Tuition",
@@ -94,33 +94,35 @@ export default function ScholarshipsPage() {
     trpc.scholarship.getPageData.useQuery();
 
   const scholarships = pageData?.scholarships;
-  const eligibilityData = pageData
-    ? {
-        eligibility: pageData.eligibility,
-        hasTranscript: pageData.hasTranscript,
-        subjectCount: pageData.subjectCount,
-        userGPA: pageData.userGPA,
-      }
-    : undefined;
+  const eligibilityData = useMemo(() => {
+    if (!pageData) return undefined;
+    return {
+      eligibility: pageData.eligibility,
+      hasTranscript: pageData.hasTranscript,
+      subjectCount: pageData.subjectCount,
+      userGPA: pageData.userGPA,
+    };
+  }, [pageData]);
   const eligibilityLoading = isLoading;
   const userApplications = pageData?.applications;
 
   const startApplication = trpc.application.startApplication.useMutation();
   const router = useRouter();
 
-  const getEligibilityForScholarship = (
-    scholarshipId: string,
-  ): EligibilityData => {
-    if (!eligibilityData?.eligibility) {
-      return { eligible: true, reasons: [] };
-    }
-    return (
-      eligibilityData.eligibility[scholarshipId] ?? {
-        eligible: true,
-        reasons: [],
+  const getEligibilityForScholarship = useCallback(
+    (scholarshipId: string): EligibilityData => {
+      if (!eligibilityData?.eligibility) {
+        return { eligible: true, reasons: [] };
       }
-    );
-  };
+      return (
+        eligibilityData.eligibility[scholarshipId] ?? {
+          eligible: true,
+          reasons: [],
+        }
+      );
+    },
+    [eligibilityData],
+  );
 
   const filteredScholarships = useMemo(() => {
     if (!scholarships) return [];
@@ -200,8 +202,7 @@ export default function ScholarshipsPage() {
       return !elig.eligible;
     });
     return { eligible, notEligible };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredScholarships, eligibilityData]);
+  }, [filteredScholarships, getEligibilityForScholarship]);
 
   const getDeadlineInfo = (deadline: string) => {
     const date = new Date(deadline);

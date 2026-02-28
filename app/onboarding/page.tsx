@@ -42,9 +42,9 @@ export default function OnboardingPage() {
       if (onboardingStatus.onboardingCompleted) {
         router.push("/dashboard/scholarships");
       } else {
-        console.log(onboardingStatus.onboardingStep);
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setCurrentStep(onboardingStatus.onboardingStep);
+        setTimeout(() => {
+          setCurrentStep(onboardingStatus.onboardingStep);
+        }, 0);
       }
     }
   }, [onboardingStatus, router]);

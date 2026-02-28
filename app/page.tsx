@@ -392,8 +392,8 @@ export default function LandingPage() {
                     item.color === "green"
                       ? "bg-green-500"
                       : item.color === "blue"
-                      ? "bg-blue-500"
-                      : "bg-orange-500"
+                        ? "bg-blue-500"
+                        : "bg-orange-500"
                   }`}
                 />
                 <CardContent className="p-8">
@@ -415,7 +415,7 @@ export default function LandingPage() {
                     {item.solutions.map((sol, j) => (
                       <div key={j} className="flex gap-3">
                         <CheckCircle2
-                          className={`w-5 h-5 ${item.iconColor} flex-shrink-0 mt-0.5`}
+                          className={`w-5 h-5 ${item.iconColor} shrink-0 mt-0.5`}
                         />
                         <div>
                           <p className="font-semibold text-foreground text-sm">
