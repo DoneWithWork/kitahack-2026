@@ -1,6 +1,6 @@
 # MyDANA: AI-Powered Malaysian Scholarship Platform
 
-**MyDANA**  transforms the fragmented scholarship discovery process into an intelligent, automated, and deterministic workflow. Built for **KitaHack 2026**, it leverages Google Cloud's AI suite to simplify requirements while using strict business logic to ensure fairness and accuracy.
+**MyDANA**  transforms the fragmented scholarship discovery process into an intelligent, automated, and deterministic workflow. Built for **KitaHack 2026**, it leverages Google AI technologies to simplify requirements while using strict business logic to ensure fairness and accuracy.
 
 ---
 
