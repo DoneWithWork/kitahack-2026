@@ -1,6 +1,6 @@
-# ScholarGuide: AI-Powered Malaysian Scholarship Platform
+# MyDANA: AI-Powered Malaysian Scholarship Platform
 
-**ScholarGuide** (formerly MyDana) transforms the fragmented scholarship discovery process into an intelligent, automated, and deterministic workflow. Built for **KitaHack 2026**, it leverages Google Cloud's AI suite to simplify requirements while using strict business logic to ensure fairness and accuracy.
+**MyDANA** (formerly MyDana) transforms the fragmented scholarship discovery process into an intelligent, automated, and deterministic workflow. Built for **KitaHack 2026**, it leverages Google Cloud's AI suite to simplify requirements while using strict business logic to ensure fairness and accuracy.
 
 ---
 
@@ -33,7 +33,7 @@ SPM school leavers in Malaysia face a fragmented scholarship landscape. Informat
 
 ## 2. Tech Stack & Google Cloud Integration
 
-ScholarGuide leverages a robust modern stack with deep integration into the Google Cloud ecosystem for high-performance AI and infrastructure.
+MyDANA leverages a robust modern stack with deep integration into the Google Cloud ecosystem for high-performance AI and infrastructure.
 
 ### Google Cloud & AI Tools
 - **Google Gemini 3.0 & 2.5 Flash:** Orchestrated via Google Cloud to power the platform's multi-modal intelligence.
@@ -57,7 +57,7 @@ ScholarGuide leverages a robust modern stack with deep integration into the Goog
 
 ## 3. Technical Architecture & Implementation Overview
 
-ScholarGuide follows a **Deterministic Intelligence** pattern:
+MyDANA follows a **Deterministic Intelligence** pattern:
 1.  **AI for Normalization (Gemini 2.5 Flash):** High-speed multi-modal extraction of text from transcripts and scholarship PDFs into a standardized Zod schema.
 2.  **Deterministic Logic:** Pure TypeScript functions handle eligibility matching (e.g., Grade "A+" counting towards "A" requirements). **AI never decides who gets a scholarship.**
 3.  **Complex Reasoning (Gemini 3.0):** Powers the intelligent essay feedback and interview scenario generation, ensuring high-quality, personalized student support.
@@ -126,5 +126,5 @@ Simulates company-specific interviews (e.g., Maxis, Petronas) using AI trained o
 - Adaptable eligibility models for regional qualification standards.
 
 ---
-**ScholarGuide** — *Unlocking futures, one application at a time.*
+**MyDANA** — *Unlocking futures, one application at a time.*
 Built for **KitaHack 2026**.

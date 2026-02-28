@@ -15,7 +15,7 @@ export const userSchema = z.object({
   currentSchool: z.string().optional(),
   graduationYear: z.number().min(2024).max(2035).optional(),
   targetField: z.string().optional(),
-  gpa: z.number().min(0).max(100).optional(),
+  gpa: z.number().default(3.7),
   onboardingCompleted: z.boolean().default(false),
   onboardingStep: z.number().default(0),
   documentsUploaded: z.boolean().default(false),

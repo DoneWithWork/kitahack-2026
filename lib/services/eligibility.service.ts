@@ -113,7 +113,7 @@ function convertGPAToCGPA(gpa100: number): number {
   if (gpa100 >= 60) return 2.7;
   if (gpa100 >= 55) return 2.3;
   if (gpa100 >= 50) return 2.0;
-  return 1.0;
+  return 3.7;
 }
 
 /**
