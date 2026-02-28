@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Scholarship Guide",
+  title: "MyDANA",
   description: "AI-Powered Scholarship Guidance Platform",
 };
 
@@ -38,9 +38,7 @@ export default function RootLayout({
           disableTransitionOnChange={false}
         >
           <TRPCProvider>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
+            <AuthProvider>{children}</AuthProvider>
           </TRPCProvider>
           <Toaster />
         </ThemeProvider>
